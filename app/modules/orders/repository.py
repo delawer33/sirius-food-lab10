@@ -43,7 +43,13 @@ class SqlAlchemyOrderRepository(OrderRepository):
         self.db = db
 
     def get_user_by_id(self, user_id: int) -> User | None:
-        row = self.db.get(UserModel, user_id)
+        # Пользователя сервис читает только перед изменением баланса (заказ,
+        # отмена). SELECT ... FOR UPDATE: второй параллельный заказ ждёт
+        # commit первого и видит уже списанный баланс. Без блокировки оба
+        # заказа проходили проверку (tests/integration/test_orders_postgres.py).
+        # OF users: роль подгружается LEFT JOIN, а его PostgreSQL блокировать не даёт.
+        # populate_existing — свежий баланс, даже если пользователь уже в сессии.
+        row = self.db.get(UserModel, user_id, with_for_update={"of": UserModel}, populate_existing=True)
         return user_to_entity(row) if row else None
 
     def get_menu_item_by_id(self, item_id: int) -> MenuItem | None:

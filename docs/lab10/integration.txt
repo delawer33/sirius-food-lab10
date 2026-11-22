@@ -1,0 +1,13 @@
+tests/integration/test_orders_postgres.py::test_create_order_saves_to_db PASSED [  8%]
+tests/integration/test_orders_postgres.py::test_rejected_order_leaves_no_trace PASSED [ 16%]
+tests/integration/test_orders_postgres.py::test_each_test_starts_with_clean_db PASSED [ 25%]
+tests/integration/test_orders_postgres.py::test_menu_item_from_postgres PASSED [ 33%]
+tests/integration/test_orders_postgres.py::test_parallel_orders_do_not_overspend PASSED [ 41%]
+tests/integration/test_rabbitmq.py::test_kitchen_consumes_order_paid PASSED [ 50%]
+tests/integration/test_rabbitmq.py::test_kitchen_and_delivery_get_same_event_independently PASSED [ 58%]
+tests/integration/test_rabbitmq.py::test_duplicate_delivery_creates_no_duplicate PASSED [ 66%]
+tests/integration/test_rabbitmq.py::test_poison_message_goes_to_dlq_and_queue_keeps_working PASSED [ 75%]
+tests/integration/test_rabbitmq.py::test_failing_handler_retried_then_dead_lettered PASSED [ 83%]
+tests/integration/test_rabbitmq.py::test_outbox_waits_while_broker_is_down_then_publishes PASSED [ 91%]
+tests/integration/test_rabbitmq.py::test_saga_end_to_end_without_couriers PASSED [100%]
+============================= 12 passed in 22.24s ==============================

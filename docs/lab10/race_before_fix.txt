@@ -1,0 +1,58 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.3.4, pluggy-1.7.0 -- /home/delawer/all/coll/!4c/miki/lab10/sirius_food/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/delawer/all/coll/!4c/miki/lab10/sirius_food
+configfile: pytest.ini
+plugins: cov-7.1.0, platformdirs-4.14.8, locust-2.47.0, pact-python-4.2.0, anyio-4.16.0
+collecting ... collected 5 items
+tests/integration/test_orders_postgres.py::test_create_order_saves_to_db PASSED [ 20%]
+tests/integration/test_orders_postgres.py::test_rejected_order_leaves_no_trace PASSED [ 40%]
+tests/integration/test_orders_postgres.py::test_each_test_starts_with_clean_db PASSED [ 60%]
+tests/integration/test_orders_postgres.py::test_menu_item_from_postgres PASSED [ 80%]
+tests/integration/test_orders_postgres.py::test_parallel_orders_do_not_overspend FAILED [100%]
+=================================== FAILURES ===================================
+____________________ test_parallel_orders_do_not_overspend _____________________
+pg = sessionmaker(class_='Session', bind=Engine(postgresql+psycopg2://test:***@localhost:10001/test), autoflush=False, expire_on_commit=True)
+    def test_parallel_orders_do_not_overspend(pg):
+        """
+        Денег на один заказ, два заказа одновременно. Должен пройти один.
+        На SQLite в памяти (tests/conftest.py) эту гонку не увидеть: там одно
+        соединение на все потоки.
+        """
+        with pg() as db:
+            user_id = add_student(db, balance=300.0).id
+            item_id = add_item(db, "Борщ", 250.0).id
+        start = threading.Barrier(2)
+        results: list[str] = []
+        def order():
+            with pg() as session:
+                service = OrderService(SlowRepository(session), RecordingNotifier())
+                start.wait()
+                try:
+                    service.create_order(user_id, item_id, 1)
+                    results.append("ok")
+                except BusinessRuleError:
+                    results.append("rejected")
+        threads = [threading.Thread(target=order) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        with pg() as db:
+            orders = db.query(Order).count()
+            balance = db.get(User, user_id).balance
+>       assert sorted(results) == ["ok", "rejected"]
+E       AssertionError: assert ['ok', 'ok'] == ['ok', 'rejected']
+E         
+E         At index 1 diff: 'ok' != 'rejected'
+E         
+E         Full diff:
+E           [
+E               'ok',
+E         -     'rejected',
+E         +     'ok',
+E           ]
+tests/integration/test_orders_postgres.py:122: AssertionError
+=========================== short test summary info ============================
+FAILED tests/integration/test_orders_postgres.py::test_parallel_orders_do_not_overspend
+========================= 1 failed, 4 passed in 4.08s ==========================
