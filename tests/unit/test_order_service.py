@@ -228,3 +228,8 @@ def test_compensation_is_idempotent(placed, storage):
 
     assert placed.compensate_failed_delivery(1) is None
     assert storage.users[1].balance == 1000.0
+
+
+def test_demo_broken():
+    """Демо для защиты: заведомо сломанный тест, CI должен покраснеть и не дать смержить PR."""
+    assert 1 == 2
