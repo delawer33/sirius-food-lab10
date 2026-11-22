@@ -1,0 +1,61 @@
+
+=== Студент входит ===
+$ STUDENT=$(login student@sirius.ru); echo "токен: ${STUDENT:0:25}..."
+токен: eyJhbGciOiJIUzI1NiIsInR5c...
+
+=== Заказ с X-Correlation-ID: demo-42 — тот же ID возвращается в ответе ===
+$ curl -s -D - -o /tmp/order.json -X POST http://127.0.0.1:8010/orders/create -H "Authorization: Bearer $STUDENT" -H 'Content-Type: application/json' -H 'X-Correlation-ID: demo-42' -d '{"item_id": 1, "quantity": 1}' | grep -iE '^(HTTP|x-correlation-id)'; cat /tmp/order.json; echo
+HTTP/1.1 200 OK
+x-correlation-id: demo-42
+{"status":"success","order_id":23}
+# пауза 3 с: смотрите терминалы consumer'ов
+
+=== Монолит: запрос и order_created ===
+$ logs_of sirius_app demo-42
+{"order_id":23,"user_id":1,"item_id":1,"quantity":1,"duration_ms":16.2,"correlation_id":"demo-42","level":"info","timestamp":"2026-11-17T12:53:52.174764Z","service":"sirius-app","trace_id":"55362c8bb06070e9bdd5e585e6ab4ffa","span_id":"ce7c58eef9f36d61","message":"order_created"}
+{"method":"POST","path":"/orders/create","status":200,"duration_ms":21.4,"correlation_id":"demo-42","level":"info","timestamp":"2026-11-17T12:53:52.175341Z","service":"sirius-app","trace_id":"55362c8bb06070e9bdd5e585e6ab4ffa","span_id":"ce7c58eef9f36d61","message":"http_request"}
+
+=== Релей outbox взял ID из строки outbox и положил в заголовок сообщения ===
+$ logs_of sirius_outbox_relay demo-42
+{"component":"Outbox","routing_key":"order.paid","outbox_id":23,"order_id":23,"event_id":"4ef4d2e4-dd8a-4ddf-97e0-f77c20959b0c","correlation_id":"demo-42","level":"info","timestamp":"2026-11-17T12:53:52.470587Z","service":"outbox-relay","trace_id":"55362c8bb06070e9bdd5e585e6ab4ffa","span_id":"8af208a712389279","message":"event_published"}
+
+=== Кухня получила тот же ID из заголовка сообщения ===
+$ logs_of sirius_kitchen demo-42
+{"result":"Принят заказ 23 (event=4ef4d2e4)","attempt":1,"event_id":"4ef4d2e4-dd8a-4ddf-97e0-f77c20959b0c","routing_key":"order.paid","correlation_id":"demo-42","order_id":23,"component":"Kitchen","queue":"kitchen_queue","level":"info","timestamp":"2026-11-17T12:53:52.503778Z","service":"kitchen","trace_id":"55362c8bb06070e9bdd5e585e6ab4ffa","span_id":"2f5fc7ade2fdf255","message":"order_received"}
+
+=== И остальные consumer'ы того же события ===
+$ logs_of sirius_delivery_worker demo-42
+{"result":"Подготовка доставки для заказа 23: свободных курьеров 1 (event=4ef4d2e4)","attempt":1,"correlation_id":"demo-42","order_id":23,"queue":"delivery_queue","routing_key":"order.paid","component":"Delivery","event_id":"4ef4d2e4-dd8a-4ddf-97e0-f77c20959b0c","level":"info","timestamp":"2026-11-17T12:53:52.500361Z","service":"delivery-worker","trace_id":"55362c8bb06070e9bdd5e585e6ab4ffa","span_id":"299976330675d55f","message":"delivery_planned"}
+$ logs_of sirius_event_log demo-42
+{"result":"order.paid {\"event_id\": \"4ef4d2e4-dd8a-4ddf-97e0-f77c20959b0c\", \"event_type\": \"OrderPaid\", \"occurred_at\": \"2026-11-17T12:53:52+00:00\", \"order_id\": 23, \"customer_id\": 1, \"amount\": 250.0}","attempt":1,"queue":"event_log_queue","event_id":"4ef4d2e4-dd8a-4ddf-97e0-f77c20959b0c","component":"Events","order_id":23,"correlation_id":"demo-42","routing_key":"order.paid","level":"info","timestamp":"2026-11-17T12:53:52.477325Z","service":"event-log","trace_id":"55362c8bb06070e9bdd5e585e6ab4ffa","span_id":"5b0d8ee5ec3f094a","message":"event_logged"}
+
+=== trace_id из лога — ключ к трейсу в Jaeger ===
+# заказ 23, трейс: http://localhost:16686/trace/55362c8bb06070e9bdd5e585e6ab4ffa
+# span'ы уходят в Jaeger пачками раз в 5 с — ждём
+$ curl -s http://localhost:16686/api/traces/55362c8bb06070e9bdd5e585e6ab4ffa | jq -r '.data[0] | .processes as $p | .spans | sort_by(.startTime) | .[] | "\($p[.processID].serviceName)\t\(.operationName)\t\(.duration / 1000) ms"' | column -t -s $'\t'
+sirius-app       POST /orders/create               21.983 ms
+sirius-app       POST /orders/create http receive  0.015 ms
+sirius-app       connect                           0.231 ms
+sirius-app       SELECT sirius_food                0.472 ms
+sirius-app       SELECT sirius_food                0.252 ms
+sirius-app       SELECT sirius_food                0.145 ms
+sirius-app       SELECT sirius_food                0.231 ms
+sirius-app       UPDATE sirius_food                0.33 ms
+sirius-app       INSERT sirius_food                0.662 ms
+sirius-app       INSERT sirius_food                0.604 ms
+sirius-app       connect                           0.159 ms
+sirius-app       SELECT sirius_food                0.542 ms
+sirius-app       POST /orders/create http send     0.021 ms
+sirius-app       POST /orders/create http send     0.01 ms
+sirius-app       POST /orders/create http send     0.007 ms
+outbox-relay     order.paid publish                11.332 ms
+delivery-worker  delivery_queue process            32.37 ms
+event-log        event_log_queue process           7.994 ms
+kitchen          kitchen_queue process             33.771 ms
+delivery-worker  connect                           12.425 ms
+kitchen          connect                           11.383 ms
+delivery-worker  INSERT sirius_food                1.288 ms
+delivery-worker  SELECT sirius_food                3.111 ms
+kitchen          INSERT sirius_food                1.005 ms
+delivery-worker  INSERT sirius_food                0.958 ms
+kitchen          INSERT sirius_food                1.471 ms

@@ -1,0 +1,27 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+pydantic[email]==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+python-multipart==0.0.20
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]==3.3.0
+alembic==1.14.0
+redis==5.2.1
+celery==5.5.3
+grpcio==1.84.0
+protobuf==7.36.2
+aio-pika==9.5.5
+# Наблюдаемость (лабораторная № 9).
+structlog==26.1.0
+prometheus-fastapi-instrumentator==7.1.0
+prometheus-client==0.26.0
+sentry-sdk[fastapi]==2.75.0
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-otlp-proto-http==1.45.2
+opentelemetry-instrumentation-fastapi==0.66b2
+opentelemetry-instrumentation-sqlalchemy==0.66b2
+opentelemetry-instrumentation-grpc==0.66b2

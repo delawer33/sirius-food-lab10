@@ -1,0 +1,94 @@
+[mvp] POST /users/register {'email': 'anna@sirius.ru', 'password': 'smoke-password', 'phone': '+79990001122'} -> 200 {"email": "anna@sirius.ru", "status": "success", "user_id": 1}
+[mvp] POST /users/register {'email': 'anna@sirius.ru', 'password': 'smoke-password'} -> 400 {"detail": "Пользователь с таким email уже зарегистрирован"}
+[mvp] POST /users/register {'email': 'boris@sirius.ru', 'password': 'smoke-password', 'phone': '123'} -> 400 {"detail": "Некорректный формат номера телефона"}
+[mvp] POST /users/register {'email': 'boris@sirius.ru', 'password': 'smoke-password'} -> 200 {"email": "boris@sirius.ru", "status": "success", "user_id": 2}
+[mvp] POST /users/register {'email': 'not-an-email', 'password': 'smoke-password'} -> 422 {"detail": [{"ctx": {"reason": "An email address must have an @-sign."}, "input": "not-an-email", "loc": ["body", "email"], "msg": "value is not a valid email address: An email address must have an @-sign.", "type": "value_error"}]}
+POST /users/register {'email': 'short@sirius.ru', 'password': '1234567'} -> 422 {"detail": [{"ctx": {"min_length": 8}, "input": "1234567", "loc": ["body", "password"], "msg": "String should have at least 8 characters", "type": "string_too_short"}]}
+POST /auth/login {'email': 'anna@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/login {'email': 'boris@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/login {'email': 'admin@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/login {'email': 'cook@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/login {'email': 'courier@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/login {'email': 'anna@sirius.ru', 'password': 'wrong-password'} -> 401 {"detail": "Неверный email или пароль"}
+POST /auth/login {'email': 'nobody@sirius.ru', 'password': 'smoke-password'} -> 401 {"detail": "Неверный email или пароль"}
+GET /users/me as anna  -> 200 {"balance": 0.0, "email": "anna@sirius.ru", "id": 1, "is_blocked": false, "phone": "+79990001122", "role": "student"}
+[mvp] POST /users/1/topup?amount=0 as anna  -> 400 {"detail": "Сумма пополнения должна быть положительной"}
+[mvp] POST /users/999/topup?amount=100 as admin  -> 404 {"detail": "Пользователь не найден"}
+POST /users/999/topup?amount=100 as anna  -> 403 {"detail": "Нельзя пополнить чужой баланс"}
+[mvp] POST /users/1/topup?amount=50001 as anna  -> 400 {"detail": "Максимальная сумма пополнения — 50000 рублей"}
+[mvp] POST /users/1/topup?amount=1000 as anna  -> 200 {"new_balance": 1000.0, "status": "success"}
+PATCH /users/2/block as anna {'is_blocked': True} -> 403 {"detail": "Доступ запрещён для вашей роли"}
+PATCH /users/2/block as admin {'is_blocked': True} -> 200 {"balance": 0.0, "email": "boris@sirius.ru", "id": 2, "is_blocked": true, "phone": null, "role": "student"}
+[mvp] POST /users/2/topup?amount=100 as admin  -> 403 {"detail": "Пользователь заблокирован. Пополнение невозможно"}
+GET /users/me as boris  -> 403 {"detail": "Пользователь заблокирован"}
+POST /menu/items as anna {'name': 'Борщ', 'price': 250} -> 403 {"detail": "Доступ запрещён для вашей роли"}
+[mvp] POST /menu/items as cook {'name': 'Борщ', 'price': 250} -> 200 {"item_id": 1, "status": "success"}
+[mvp] POST /menu/items as cook {'name': 'Борщ', 'price': 300} -> 400 {"detail": "Блюдо с таким названием уже существует"}
+[mvp] POST /menu/items as cook {'name': 'Плов', 'price': 0} -> 400 {"detail": "Цена должна быть положительной"}
+[mvp] POST /menu/items as cook {'name': 'П', 'price': 100} -> 400 {"detail": "Название блюда слишком короткое"}
+[mvp] POST /menu/items as admin {'name': 'Компот', 'price': 60} -> 200 {"item_id": 2, "status": "success"}
+[mvp] PATCH /menu/items/999 as cook {'price': 10} -> 404 {"detail": "Блюдо не найдено"}
+[mvp] PATCH /menu/items/1 as cook {'price': -5} -> 400 {"detail": "Цена должна быть положительной"}
+[mvp] PATCH /menu/items/1 as cook {'price': 200} -> 200 {"item_id": 1, "status": "success"}
+[mvp] PATCH /menu/items/2 as cook {'is_available': False} -> 200 {"item_id": 2, "status": "success"}
+[mvp] PATCH /menu/items/2 as cook {'name': 'Компот вишнёвый'} -> 200 {"item_id": 2, "status": "success"}
+PATCH /menu/items/1 as courier {'price': 1} -> 403 {"detail": "Доступ запрещён для вашей роли"}
+GET /menu/items  -> 200 [{"id": 1, "is_available": true, "name": "Борщ", "price": 200.0}, {"id": 2, "is_available": false, "name": "Компот вишнёвый", "price": 60.0}]
+POST /orders/create {'item_id': 1, 'quantity': 1} -> 401 {"detail": "Требуется аутентификация"}
+POST /orders/create {'item_id': 1, 'quantity': 1} -> 401 {"detail": "Недействительный токен"}
+POST /orders/create {'item_id': 1, 'quantity': 1} -> 401 {"detail": "Недействительный токен"}
+POST /orders/create as cook {'item_id': 1, 'quantity': 1} -> 403 {"detail": "Доступ запрещён для вашей роли"}
+[mvp] POST /orders/create as anna {'item_id': 1, 'quantity': 0} -> 400 {"detail": "Количество должно быть больше нуля"}
+[mvp] POST /orders/create as anna {'item_id': 999, 'quantity': 1} -> 404 {"detail": "Блюдо не найдено"}
+[mvp] POST /orders/create as anna {'item_id': 2, 'quantity': 1} -> 400 {"detail": "Блюдо недоступно"}
+[mvp] POST /orders/create as anna {'item_id': 1, 'quantity': 10} -> 400 {"detail": "Недостаточно средств на балансе студента"}
+[mvp] POST /orders/create as anna {'item_id': 1, 'quantity': 3} -> 200 {"order_id": 1, "status": "success"}
+[mvp] POST /users/1/topup?amount=1 as anna  -> 200 {"new_balance": 401.0, "status": "success"}
+POST /orders/create as anna {'user_id': 2, 'item_id': 1, 'quantity': 1} -> 200 {"order_id": 2, "status": "success"}
+PATCH /users/2/block as admin {'is_blocked': False} -> 200 {"balance": 0.0, "email": "boris@sirius.ru", "id": 2, "is_blocked": false, "phone": null, "role": "student"}
+POST /users/1/topup?amount=500 as boris  -> 403 {"detail": "Нельзя пополнить чужой баланс"}
+POST /users/2/topup?amount=500 as boris  -> 200 {"new_balance": 500.0, "status": "success"}
+POST /orders/create as boris {'item_id': 1, 'quantity': 1} -> 200 {"order_id": 3, "status": "success"}
+GET /orders/3 as anna  -> 403 {"detail": "Нет доступа к этому заказу"}
+POST /orders/3/cancel as anna  -> 403 {"detail": "Нельзя отменить чужой заказ"}
+GET /orders/3 as cook  -> 200 {"id": 3, "item_id": 1, "quantity": 1, "status": "processing", "total_cost": 200.0, "user_id": 2}
+POST /orders/3/cancel as boris  -> 200 {"status": "success"}
+POST /orders/3/cancel as boris  -> 400 {"detail": "Отменить можно только заказ, который ещё готовится"}
+POST /orders/999/cancel as boris  -> 404 {"detail": "Заказ не найден"}
+GET /orders/my as boris  -> 200 [{"id": 3, "item_id": 1, "quantity": 1, "status": "cancelled", "total_cost": 200.0, "user_id": 2}]
+GET /users/me as boris  -> 200 {"balance": 500.0, "email": "boris@sirius.ru", "id": 2, "is_blocked": false, "phone": null, "role": "student"}
+GET /kitchen/orders as anna  -> 403 {"detail": "Доступ запрещён для вашей роли"}
+GET /kitchen/orders as cook  -> 200 [{"id": 1, "item_id": 1, "quantity": 3, "status": "processing", "total_cost": 600.0, "user_id": 1}, {"id": 2, "item_id": 1, "quantity": 1, "status": "processing", "total_cost": 200.0, "user_id": 1}]
+POST /delivery/assign as admin {'order_id': 1, 'courier_id': 5} -> 400 {"detail": "Курьера можно назначить только на готовый заказ"}
+POST /kitchen/orders/1/ready as courier  -> 403 {"detail": "Доступ запрещён для вашей роли"}
+POST /kitchen/orders/1/ready as cook  -> 200 {"status": "success"}
+POST /orders/1/cancel as anna  -> 400 {"detail": "Отменить можно только заказ, который ещё готовится"}
+POST /delivery/assign as courier {'order_id': 1, 'courier_id': 5} -> 403 {"detail": "Доступ запрещён для вашей роли"}
+POST /delivery/assign as admin {'order_id': 1, 'courier_id': 2} -> 400 {"detail": "Пользователь не является курьером"}
+POST /delivery/assign as admin {'order_id': 1, 'courier_id': 5} -> 200 {"delivery_id": 1, "status": "success"}
+POST /delivery/assign as admin {'order_id': 1, 'courier_id': 5} -> 400 {"detail": "Курьера можно назначить только на готовый заказ"}
+GET /delivery/my as courier  -> 200 [{"courier_id": 5, "id": 1, "order_id": 1, "status": "in_progress"}]
+GET /delivery/my as anna  -> 403 {"detail": "Доступ запрещён для вашей роли"}
+GET /delivery/1 as boris  -> 403 {"detail": "Нет доступа к этой доставке"}
+GET /delivery/1 as anna  -> 200 {"courier_id": 5, "id": 1, "order_id": 1, "status": "in_progress"}
+PATCH /delivery/1/complete as anna  -> 403 {"detail": "Доступ запрещён для вашей роли"}
+PATCH /delivery/1/complete as courier  -> 200 {"status": "success"}
+PATCH /delivery/1/complete as courier  -> 400 {"detail": "Доставка уже завершена"}
+GET /orders/1 as anna  -> 200 {"id": 1, "item_id": 1, "quantity": 3, "status": "delivered", "total_cost": 600.0, "user_id": 1}
+PATCH /users/2/role as boris {'role': 'admin'} -> 403 {"detail": "Доступ запрещён для вашей роли"}
+PATCH /users/3/role as admin {'role': 'student'} -> 400 {"detail": "Нельзя изменить собственную роль"}
+PATCH /users/2/role as admin {'role': 'superuser'} -> 400 {"detail": "Неизвестная роль: superuser"}
+PATCH /users/2/role as admin {'role': 'courier'} -> 200 {"balance": 500.0, "email": "boris@sirius.ru", "id": 2, "is_blocked": false, "phone": null, "role": "courier"}
+GET /delivery/my as boris  -> 200 []
+POST /auth/login {'email': 'anna@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/refresh {'refresh_token': '<jwt>'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+POST /auth/refresh {'refresh_token': '<jwt>'} -> 401 {"detail": "Недействительный refresh-токен"}
+GET /users/me  -> 200 {"balance": 201.0, "email": "anna@sirius.ru", "id": 1, "is_blocked": false, "phone": "+79990001122", "role": "student"}
+POST /auth/refresh {'refresh_token': '<jwt>'} -> 401 {"detail": "Refresh-токен уже использован. Все сессии завершены, войдите заново"}
+POST /auth/refresh {'refresh_token': '<jwt>'} -> 401 {"detail": "Недействительный refresh-токен"}
+POST /auth/refresh {'refresh_token': '<jwt>'} -> 401 {"detail": "Недействительный refresh-токен"}
+GET /users/me  -> 401 {"detail": "Недействительный токен"}
+POST /auth/login {'email': 'anna@sirius.ru', 'password': 'smoke-password'} -> 200 {"access_token": "<jwt>", "refresh_token": "<jwt>", "token_type": "bearer"}
+GET /users/me as anna  -> 200 {"balance": 201.0, "email": "anna@sirius.ru", "id": 1, "is_blocked": false, "phone": "+79990001122", "role": "student"}
+POST /auth/logout {'refresh_token': '<jwt>'} -> 200 {"status": "success"}
+POST /auth/refresh {'refresh_token': '<jwt>'} -> 401 {"detail": "Refresh-токен уже использован. Все сессии завершены, войдите заново"}

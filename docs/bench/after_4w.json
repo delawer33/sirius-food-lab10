@@ -1,0 +1,18 @@
+{
+  "label": "after_4w",
+  "note": "uvicorn --workers 4, CACHE_ENABLED=True",
+  "users": 500,
+  "requests": 48687,
+  "failures": 0,
+  "rps": 545.4,
+  "avg_ms": 318.5,
+  "median_ms": 290.0,
+  "p95_ms": 700.0,
+  "p99_ms": 960.0,
+  "pg_transactions": 20,
+  "pg_rows_read": 12771,
+  "pg_cpu_seconds": 0.1,
+  "load_avg_1m": 11.99,
+  "load_avg_5m": 8.26,
+  "seconds": 91
+}

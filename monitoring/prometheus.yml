@@ -1,0 +1,26 @@
+# Prometheus опрашивает /metrics каждые 5 секунд. Адреса — имена сервисов
+# в сети compose.
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # Монолит: RED-метрики HTTP и свои (заказы, кеш).
+  - job_name: sirius_app
+    static_configs:
+      - targets: ["app:8000"]
+
+  # Consumer'ы и релей outbox: метрики на отдельном порту 9100.
+  - job_name: sirius_workers
+    static_configs:
+      - targets: ["kitchen:9100", "outbox_relay:9100", "delivery_server:9100", "delivery_worker:9100", "saga:9100", "event_log:9100"]
+
+  # RabbitMQ: метрики по каждой очереди (rabbitmq_queue_messages{queue=...}).
+  - job_name: rabbitmq
+    metrics_path: /metrics/per-object
+    static_configs:
+      - targets: ["rabbitmq:15692"]
+
+  # Redis: hits/misses keyspace для cache hit rate.
+  - job_name: redis
+    static_configs:
+      - targets: ["redis_exporter:9121"]

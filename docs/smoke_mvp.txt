@@ -1,0 +1,27 @@
+POST /users/register {'email': 'anna@sirius.ru', 'phone': '+79990001122'} -> 200 {"email": "anna@sirius.ru", "status": "success", "user_id": 1}
+POST /users/register {'email': 'anna@sirius.ru'} -> 400 {"detail": "Пользователь с таким email уже зарегистрирован"}
+POST /users/register {'email': 'boris@sirius.ru', 'phone': '123'} -> 400 {"detail": "Некорректный формат номера телефона"}
+POST /users/register {'email': 'boris@sirius.ru'} -> 200 {"email": "boris@sirius.ru", "status": "success", "user_id": 2}
+POST /users/register {'email': 'not-an-email'} -> 422 {"detail": [{"ctx": {"reason": "An email address must have an @-sign."}, "input": "not-an-email", "loc": ["body", "email"], "msg": "value is not a valid email address: An email address must have an @-sign.", "type": "value_error"}]}
+POST /users/1/topup?amount=0  -> 400 {"detail": "Сумма пополнения должна быть положительной"}
+POST /users/999/topup?amount=100  -> 404 {"detail": "Пользователь не найден"}
+POST /users/1/topup?amount=50001  -> 400 {"detail": "Максимальная сумма пополнения — 50000 рублей"}
+POST /users/1/topup?amount=1000  -> 200 {"new_balance": 1000.0, "status": "success"}
+POST /users/2/topup?amount=100  -> 403 {"detail": "Пользователь заблокирован. Пополнение невозможно"}
+POST /menu/items {'name': 'Борщ', 'price': 250} -> 200 {"item_id": 1, "status": "success"}
+POST /menu/items {'name': 'Борщ', 'price': 300} -> 400 {"detail": "Блюдо с таким названием уже существует"}
+POST /menu/items {'name': 'Плов', 'price': 0} -> 400 {"detail": "Цена должна быть положительной"}
+POST /menu/items {'name': 'П', 'price': 100} -> 400 {"detail": "Название блюда слишком короткое"}
+POST /menu/items {'name': 'Компот', 'price': 60} -> 200 {"item_id": 2, "status": "success"}
+PATCH /menu/items/999 {'price': 10} -> 404 {"detail": "Блюдо не найдено"}
+PATCH /menu/items/1 {'price': -5} -> 400 {"detail": "Цена должна быть положительной"}
+PATCH /menu/items/1 {'price': 200} -> 200 {"item_id": 1, "status": "success"}
+PATCH /menu/items/2 {'is_available': False} -> 200 {"item_id": 2, "status": "success"}
+PATCH /menu/items/2 {'name': 'Компот вишнёвый'} -> 200 {"item_id": 2, "status": "success"}
+POST /orders/create {'user_id': 1, 'item_id': 1, 'quantity': 0} -> 400 {"detail": "Количество должно быть больше нуля"}
+POST /orders/create {'user_id': 999, 'item_id': 1, 'quantity': 1} -> 404 {"detail": "Пользователь не найден"}
+POST /orders/create {'user_id': 1, 'item_id': 999, 'quantity': 1} -> 404 {"detail": "Блюдо не найдено"}
+POST /orders/create {'user_id': 1, 'item_id': 2, 'quantity': 1} -> 400 {"detail": "Блюдо недоступно"}
+POST /orders/create {'user_id': 1, 'item_id': 1, 'quantity': 10} -> 400 {"detail": "Недостаточно средств на балансе студента"}
+POST /orders/create {'user_id': 1, 'item_id': 1, 'quantity': 3} -> 200 {"order_id": 1, "status": "success"}
+POST /users/1/topup?amount=1  -> 200 {"new_balance": 401.0, "status": "success"}

@@ -1,0 +1,7 @@
+{
+  "label": "cache_False",
+  "requests": 200,
+  "median_ms": 5.82,
+  "p95_ms": 7.98,
+  "min_ms": 3.29
+}

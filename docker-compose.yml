@@ -1,0 +1,221 @@
+# ЛР № 8: по умолчанию поднимается только то, что нужно витрине:
+# db, redis, rabbitmq, migrate (миграции и демо-меню) и app.
+#
+#   docker compose up -d --build
+#   API  http://localhost:8010  (Swagger /docs; порт 8000 на этой машине занят)
+#
+# Вся система ЛР № 9 (consumer-ы, Grafana, Jaeger, GlitchTip): docker compose --profile full up -d
+# Grafana тоже на :3000 — вместе с Next.js dev-сервером её не запускать.
+# Отдельное имя проекта: у копий проекта из других лабораторных свои тома.
+name: sirius-food-lab8
+
+x-app: &app
+  build: .
+  image: sirius-food-lab8
+  restart: unless-stopped
+  environment: &app-env
+    SECRET_KEY: lab9-demo-secret-key-at-least-32-characters
+    DATABASE_URL: postgresql://sirius:sirius@db:5432/sirius_food
+    REDIS_URL: redis://redis:6379
+    RABBITMQ_URL: amqp://sirius:sirius@rabbitmq:5672/
+    DELIVERY_GRPC_TARGET: delivery_server:50051
+    DEBUG: "True"
+    NOTIFICATIONS_MODE: sync
+    PDF_DELAY: "0"
+    EMAIL_DELAY: "0"
+    SMS_DELAY: "0"
+    EMAIL_FAIL_EVERY: "0"
+    RATE_LIMIT_ENABLED: "False"
+    # ЛР № 8: CSR-страница /menu-csr ходит в API из браузера с этого origin.
+    ALLOWED_ORIGINS: '["http://localhost:3000"]'
+    # Трейсы — в Jaeger, ошибки — в GlitchTip (DSN появляется в .env после настройки).
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    SENTRY_DSN: ${SENTRY_DSN:-}
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+
+# Consumer'ы и релей отдают метрики на отдельном порту.
+x-worker-env: &worker-env
+  <<: *app-env
+  METRICS_PORT: "9100"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sirius_db
+    environment:
+      POSTGRES_USER: sirius
+      POSTGRES_PASSWORD: sirius
+      POSTGRES_DB: sirius_food
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      # Вторая база — для GlitchTip. Скрипт выполняется только на пустом томе.
+      - ./monitoring/postgres-init.sql:/docker-entrypoint-initdb.d/glitchtip.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sirius"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: sirius_redis
+    ports:
+      - "${REDIS_PORT:-56380}:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: sirius_rabbitmq
+    # Имя узла фиксировано: под ним RabbitMQ хранит данные в томе.
+    hostname: sirius-rabbit
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
+      - "15692:15692"   # метрики Prometheus (плагин rabbitmq_prometheus включён в образе)
+    environment:
+      RABBITMQ_DEFAULT_USER: sirius
+      RABBITMQ_DEFAULT_PASS: sirius
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      retries: 30
+
+  # Миграции, демо-данные, очереди и DLQ. Отрабатывает и завершается.
+  migrate:
+    <<: *app
+    container_name: sirius_migrate
+    restart: "no"
+    command: sh -c "alembic upgrade head && python -m scripts.seed_demo && python -m app.workers.dlq_setup"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  app:
+    <<: *app
+    container_name: sirius_app
+    ports:
+      # 8000 на хосте занят другим проектом.
+      - "${APP_PORT:-8010}:8000"
+
+  delivery_server:
+    <<: *app
+    container_name: sirius_delivery_server
+    profiles: ["full"]
+    command: python delivery_server.py
+    environment:
+      <<: *worker-env
+
+  outbox_relay:
+    <<: *app
+    container_name: sirius_outbox_relay
+    profiles: ["full"]
+    command: python -m app.workers.outbox_relay
+    environment:
+      <<: *worker-env
+
+  kitchen:
+    <<: *app
+    container_name: sirius_kitchen
+    profiles: ["full"]
+    command: python -m app.workers.kitchen_consumer
+    environment:
+      <<: *worker-env
+
+  delivery_worker:
+    <<: *app
+    container_name: sirius_delivery_worker
+    profiles: ["full"]
+    command: python delivery_worker.py
+    environment:
+      <<: *worker-env
+
+  saga:
+    <<: *app
+    container_name: sirius_saga
+    profiles: ["full"]
+    command: python -m app.workers.saga_consumer
+    environment:
+      <<: *worker-env
+
+  event_log:
+    <<: *app
+    container_name: sirius_event_log
+    profiles: ["full"]
+    command: python -m app.workers.event_log
+    environment:
+      <<: *worker-env
+
+  # --- Наблюдаемость ---
+
+  prometheus:
+    image: mirror.gcr.io/prom/prometheus:v3.16.0
+    container_name: sirius_prometheus
+    profiles: ["full"]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+  redis_exporter:
+    image: oliver006/redis_exporter:v1.80.0
+    container_name: sirius_redis_exporter
+    profiles: ["full"]
+    environment:
+      REDIS_ADDR: redis://redis:6379
+
+  grafana:
+    image: mirror.gcr.io/grafana/grafana:13.2.6-slim
+    container_name: sirius_grafana
+    profiles: ["full"]
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/sirius.json
+    volumes:
+      # Источник Prometheus и дашборд подключаются при старте.
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
+  jaeger:
+    image: mirror.gcr.io/jaegertracing/jaeger:2.23.0
+    container_name: sirius_jaeger
+    profiles: ["full"]
+    ports:
+      - "16686:16686"   # UI
+      - "4318:4318"     # OTLP/HTTP: сюда шлют span'ы процессы, запущенные на хосте
+
+  # GlitchTip — open-source сервер с протоколом Sentry: тот же sentry-sdk,
+  # но без регистрации и работает офлайн.
+  glitchtip:
+    image: mirror.gcr.io/glitchtip/glitchtip:7.0.0
+    container_name: sirius_glitchtip
+    profiles: ["full"]
+    ports:
+      - "8090:8000"
+    environment:
+      DATABASE_URL: postgresql://sirius:sirius@db:5432/glitchtip
+      REDIS_URL: redis://redis:6379/1
+      SECRET_KEY: lab9-glitchtip-secret-key-not-for-production
+      PORT: "8000"
+      GLITCHTIP_DOMAIN: http://localhost:8090
+      DEFAULT_FROM_EMAIL: glitchtip@localhost
+      EMAIL_URL: consolemail://
+      SERVER_ROLE: all_in_one
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  rabbit_data:
+  prometheus_data:
+  grafana_data:

@@ -1,0 +1,84 @@
+[2026-10-21 14:05:42,778: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:42,780: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:42,782: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:42,783: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:43,813: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_email succeeded in 1.0048316699999305s: 'Email sent to student@sirius.ru for order 12'
+[2026-10-21 14:05:43,817: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:43,828: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_sms succeeded in 1.0180236440000954s: 'SMS sent to +79990000001 for order 12'
+[2026-10-21 14:05:43,830: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:44,813: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 2.0074866509999083s: 'PDF generated for order 12: receipts/order_12.pdf.txt'
+[2026-10-21 14:05:44,816: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:44,822: INFO/ForkPoolWorker-3] Task app.tasks.orders.generate_order_pdf succeeded in 2.016320647000157s: 'PDF generated for order 13: receipts/order_13.pdf.txt'
+[2026-10-21 14:05:44,823: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_email succeeded in 1.0023272599996744s: 'Email sent to student@sirius.ru for order 13'
+[2026-10-21 14:05:44,825: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:44,827: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:44,837: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_sms succeeded in 1.0025314159997833s: 'SMS sent to +79990000001 for order 13'
+[2026-10-21 14:05:44,841: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:45,840: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_email succeeded in 1.0059064469996883s: 'Email sent to student@sirius.ru for order 14'
+[2026-10-21 14:05:45,841: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_sms succeeded in 1.005555706999985s: 'SMS sent to +79990000001 for order 14'
+[2026-10-21 14:05:45,847: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:45,851: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:46,824: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 2.002516028000173s: 'PDF generated for order 14: receipts/order_14.pdf.txt'
+[2026-10-21 14:05:46,827: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:46,848: INFO/ForkPoolWorker-2] Task app.tasks.orders.generate_order_pdf succeeded in 2.003160865999689s: 'PDF generated for order 15: receipts/order_15.pdf.txt'
+[2026-10-21 14:05:46,850: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:46,862: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_sms succeeded in 1.0041646160002529s: 'SMS sent to +79990000001 for order 15'
+[2026-10-21 14:05:46,865: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:46,876: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_email retry: Retry in 1s: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:46,880: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:47,859: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_email succeeded in 1.0028199119997225s: 'Email sent to student@sirius.ru for order 16'
+[2026-10-21 14:05:47,861: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:47,873: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_sms succeeded in 1.0029921519999334s: 'SMS sent to +79990000001 for order 16'
+[2026-10-21 14:05:47,875: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:48,838: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 2.003672442000152s: 'PDF generated for order 16: receipts/order_16.pdf.txt'
+[2026-10-21 14:05:48,840: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:48,866: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_email succeeded in 1.0019422289997237s: 'Email sent to student@sirius.ru for order 17'
+[2026-10-21 14:05:48,868: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:48,880: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_sms succeeded in 1.0016013089998523s: 'SMS sent to +79990000001 for order 17'
+[2026-10-21 14:05:48,882: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:48,887: INFO/ForkPoolWorker-4] Task app.tasks.orders.generate_order_pdf succeeded in 2.0034790199997587s: 'PDF generated for order 17: receipts/order_17.pdf.txt'
+[2026-10-21 14:05:48,889: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:49,875: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_email succeeded in 1.0021962880000501s: 'Email sent to student@sirius.ru for order 18'
+[2026-10-21 14:05:49,877: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:49,887: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_sms succeeded in 1.0019704049996108s: 'SMS sent to +79990000001 for order 18'
+[2026-10-21 14:05:49,890: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:50,855: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 2.0065700380000635s: 'PDF generated for order 18: receipts/order_18.pdf.txt'
+[2026-10-21 14:05:50,857: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:50,884: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_email succeeded in 1.0023380719999295s: 'Email sent to student@sirius.ru for order 19'
+[2026-10-21 14:05:50,887: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:50,894: INFO/ForkPoolWorker-4] Task app.tasks.orders.generate_order_pdf succeeded in 2.0019429479998507s: 'PDF generated for order 19: receipts/order_19.pdf.txt'
+[2026-10-21 14:05:50,895: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_sms succeeded in 1.0020100440001443s: 'SMS sent to +79990000001 for order 19'
+[2026-10-21 14:05:50,896: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:50,899: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:51,907: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_sms succeeded in 1.0036280580002312s: 'SMS sent to +79990000001 for order 20'
+[2026-10-21 14:05:51,911: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:51,916: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_email retry: Retry in 1s: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:51,921: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:52,870: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 2.0046883219997653s: 'PDF generated for order 20: receipts/order_20.pdf.txt'
+[2026-10-21 14:05:52,872: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:05:52,905: INFO/ForkPoolWorker-3] Task app.tasks.orders.generate_order_pdf succeeded in 2.0026128429999517s: 'PDF generated for order 21: receipts/order_21.pdf.txt'
+[2026-10-21 14:05:52,907: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:52,918: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_email succeeded in 1.0027004819999092s: 'Email sent to student@sirius.ru for order 21'
+[2026-10-21 14:05:52,921: INFO/MainProcess] Task app.tasks.orders.send_order_sms received
+[2026-10-21 14:05:52,929: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_sms succeeded in 1.0026807930003088s: 'SMS sent to +79990000001 for order 21'
+[2026-10-21 14:05:52,931: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:53,913: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_email succeeded in 1.0020617230002244s: 'Email sent to student@sirius.ru for order 22'
+[2026-10-21 14:05:53,915: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:53,927: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_sms succeeded in 1.0023408830002154s: 'SMS sent to +79990000001 for order 22'
+[2026-10-21 14:05:53,936: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:53,942: INFO/ForkPoolWorker-2] Task app.tasks.orders.send_order_email retry: Retry in 0s: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:54,881: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 2.0031858150000517s: 'PDF generated for order 22: receipts/order_22.pdf.txt'
+[2026-10-21 14:05:54,925: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:54,932: INFO/ForkPoolWorker-3] Task app.tasks.orders.send_order_email retry: Retry in 1s: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:54,940: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:54,945: INFO/ForkPoolWorker-4] Task app.tasks.orders.send_order_email retry: Retry in 2s: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:56,940: INFO/MainProcess] Task app.tasks.orders.send_order_email received
+[2026-10-21 14:05:56,950: INFO/ForkPoolWorker-1] Task app.tasks.orders.send_order_email retry: Retry in 4s: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:57,948: ERROR/ForkPoolWorker-4] Задача b5873588-ac8e-4270-b572-2c7503f56eb3 ушла в DLQ после 4 попыток: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:05:57,953: ERROR/ForkPoolWorker-4] Task app.tasks.orders.send_order_email raised unexpected: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:06:01,939: ERROR/ForkPoolWorker-1] Задача 676f9ba3-5681-4503-b77f-e402a6d6cce6 ушла в DLQ после 4 попыток: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:06:01,946: ERROR/ForkPoolWorker-1] Task app.tasks.orders.send_order_email raised unexpected: ExternalServiceError('Email service unavailable')
+[2026-10-21 14:06:34,739: INFO/MainProcess] Task app.tasks.orders.generate_order_pdf received
+[2026-10-21 14:06:34,750: INFO/ForkPoolWorker-1] Task app.tasks.orders.generate_order_pdf succeeded in 0.002593422000245482s: 'SKIP already done: pdf_generated:12'
+[2026-10-21 14:06:41,539: INFO/MainProcess] Task app.tasks.maintenance.update_order_stats received
+[2026-10-21 14:06:41,554: INFO/ForkPoolWorker-1] Task app.tasks.maintenance.update_order_stats succeeded in 0.013818237999657867s: {'day': '2026-10-21', 'orders_count': 22, 'revenue': 1320.0}

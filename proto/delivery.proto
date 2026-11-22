@@ -1,0 +1,93 @@
+// Контракт микросервиса доставки. Единственный источник правды для сервера
+// (delivery_service/) и клиента в монолите (app/infrastructure/delivery_grpc.py).
+//
+// Код генерирует scripts/gen_proto.py в пакет delivery_grpc/.
+// Правила совместимости: номера полей не меняются и не переиспользуются,
+// новые поля только добавляются.
+
+syntax = "proto3";
+
+package delivery;
+
+service DeliveryService {
+  // Назначить курьера на заказ. FAILED_PRECONDITION: у курьера уже есть
+  // активная доставка или заказ уже везут.
+  rpc AssignCourier(AssignCourierRequest) returns (AssignCourierResponse);
+
+  // Завершить доставку. NOT_FOUND, FAILED_PRECONDITION: уже завершена или отменена.
+  rpc CompleteDelivery(CompleteDeliveryRequest) returns (CompleteDeliveryResponse);
+
+  // Доставка по id или по id заказа. NOT_FOUND, если нет.
+  rpc GetDelivery(GetDeliveryRequest) returns (GetDeliveryResponse);
+
+  // Все доставки курьера по возрастанию id.
+  rpc ListCourierDeliveries(ListCourierDeliveriesRequest) returns (ListCourierDeliveriesResponse);
+
+  // Server streaming: статусы доставки по мере движения курьера.
+  rpc TrackDelivery(TrackDeliveryRequest) returns (stream DeliveryStatus);
+
+  // Bidirectional streaming: чат клиента и курьера по одной доставке.
+  rpc ChatWithCourier(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message AssignCourierRequest {
+  int32 order_id = 1;
+  int32 courier_id = 2;
+}
+
+message AssignCourierResponse {
+  int32 delivery_id = 1;
+  string status = 2;
+}
+
+message CompleteDeliveryRequest {
+  int32 delivery_id = 1;
+}
+
+message CompleteDeliveryResponse {
+  string status = 1;
+}
+
+message GetDeliveryRequest {
+  // В методичке поиск только по заказу. Монолиту нужен и поиск по id
+  // доставки (GET /delivery/{id}). order_id сохранил номер 1.
+  oneof key {
+    int32 order_id = 1;
+    int32 delivery_id = 2;
+  }
+}
+
+message GetDeliveryResponse {
+  int32 id = 1;
+  string status = 2;
+  int32 courier_id = 3;
+  int32 order_id = 4;
+}
+
+message ListCourierDeliveriesRequest {
+  int32 courier_id = 1;
+}
+
+message ListCourierDeliveriesResponse {
+  repeated GetDeliveryResponse deliveries = 1;
+}
+
+message TrackDeliveryRequest {
+  int32 delivery_id = 1;
+}
+
+message DeliveryStatus {
+  int32 delivery_id = 1;
+  // in_progress → on_the_way → delivered
+  string status = 2;
+  // Время события, миллисекунды Unix.
+  int64 at_ms = 3;
+}
+
+message ChatMessage {
+  int32 delivery_id = 1;
+  // client, courier; сообщения сервера — system.
+  string author = 2;
+  string text = 3;
+  int64 sent_at_ms = 4;
+}

@@ -1,0 +1,11 @@
+-r requirements.txt
+pytest==8.3.4
+httpx==0.28.1
+# lua — для блокировок redis.lock() в тестах защиты от cache stampede.
+fakeredis[lua]==2.26.2
+# Мониторинг задач Celery: celery -A app.core.celery_app flower
+flower==2.0.1
+# Генерация кода из proto/delivery.proto: python -m scripts.gen_proto
+grpcio-tools==1.84.0
+# Интеграционные тесты consumer'ов на настоящем RabbitMQ в Docker.
+testcontainers[rabbitmq]==4.13.2
