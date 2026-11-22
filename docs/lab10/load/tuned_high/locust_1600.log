@@ -1,0 +1,25 @@
+[2026-11-22 23:36:57,273] delawer/INFO/locust.main: Starting Locust 2.47.0
+[2026-11-22 23:36:57,273] delawer/INFO/locust.main: Run time limit set to 90 seconds
+[2026-11-22 23:37:05,399] delawer/INFO/locust.runners: Ramping to 1600 users at a rate of 20.00 per second
+[2026-11-22 23:38:07,312] delawer/WARNING/root: CPU usage above 90%! This may constrain your throughput and may even give inconsistent response time measurements! See https://docs.locust.io/en/stable/running-distributed.html for how to distribute the load over multiple CPU cores or machines
+[2026-11-22 23:38:24,941] delawer/INFO/locust.runners: All users spawned: {"SiriusUser": 1600} (1600 total users)
+[2026-11-22 23:38:27,060] delawer/INFO/locust.main: --run-time limit reached, shutting down
+[2026-11-22 23:38:27,258] delawer/WARNING/locust.runners: CPU usage was too high at some point during the test! See https://docs.locust.io/en/stable/running-distributed.html for how to distribute the load over multiple CPU cores or machines
+[2026-11-22 23:38:27,259] delawer/INFO/locust.main: Shutting down (exit code 0)
+Type     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      /menu/items                                                                    22808     0(0.00%) |    103       2     971     48 |  253.52        0.00
+GET      /menu/items/[id]                                                                6525     0(0.00%) |    106       4    1000     52 |   72.53        0.00
+POST     /orders/create                                                                  3218     0(0.00%) |    201      21    2026    110 |   35.77        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+         Aggregated                                                                     32551     0(0.00%) |    113       2    2026     55 |  361.81        0.00
+
+Response time percentiles (approximated)
+Type     Name                                                                                  50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+GET      /menu/items                                                                            48     91    140    170    310    380    460    530    880    930    970  22808
+GET      /menu/items/[id]                                                                       52     96    150    180    300    380    470    550    870   1000   1000   6525
+POST     /orders/create                                                                        110    170    240    300    460    690   1000   1400   1900   2000   2000   3218
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                             55    100    150    190    320    390    510    630   1400   1900   2000  32551
+

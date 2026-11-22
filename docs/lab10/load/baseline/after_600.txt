@@ -1,0 +1,9 @@
+23:26:39
+GET /menu/items -> 000 за 10.002754s
+GET /menu/items -> 000 за 10.002629s
+GET /menu/items -> 000 за 10.002319s
+        state        | count |    oldest_tx    
+---------------------+-------+-----------------
+ idle in transaction |    15 | 00:01:40.307452
+(1 row)
+

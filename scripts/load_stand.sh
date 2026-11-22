@@ -13,11 +13,9 @@ PY="${PY:-.venv/bin/python}"
 
 case "${1:-api}" in
 up)
-  docker start lab10-pg lab10-redis 2>/dev/null || {
-    docker run -d --name lab10-pg -e POSTGRES_USER=sirius -e POSTGRES_PASSWORD=sirius \
-      -e POSTGRES_DB=sirius_food -p 127.0.0.1:5442:5432 postgres:16-alpine
-    docker run -d --name lab10-redis -p 127.0.0.1:6390:6379 redis:7-alpine
-  }
+  docker start lab10-pg 2>/dev/null || docker run -d --name lab10-pg -e POSTGRES_USER=sirius \
+    -e POSTGRES_PASSWORD=sirius -e POSTGRES_DB=sirius_food -p 127.0.0.1:5442:5432 postgres:16-alpine
+  docker start lab10-redis 2>/dev/null || docker run -d --name lab10-redis -p 127.0.0.1:6390:6379 redis:7-alpine
   ;;
 down)
   docker stop lab10-pg lab10-redis
