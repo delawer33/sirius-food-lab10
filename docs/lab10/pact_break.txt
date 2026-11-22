@@ -1,0 +1,15 @@
+== Контракт цел
+3 passed in 0.61s
+
+== order_id -> orderId в app/domain/events.py
+-    return _event(ORDER_PAID, "OrderPaid", order_id=order_id, customer_id=customer_id, amount=amount)
++    return _event(ORDER_PAID, "OrderPaid", orderId=order_id, customer_id=customer_id, amount=amount)
+
+== Provider-тест монолита
+Verifying a pact between kitchen and monolith
+      has a matching body (OK)
+      has a matching body (FAILED)
+1) Verifying a pact between kitchen and monolith - OrderPaid
+    1.1) has a matching body
+           $ -> Actual map is missing the following keys: order_id
+1 failed in 0.59s

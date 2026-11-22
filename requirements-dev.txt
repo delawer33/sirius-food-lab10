@@ -7,5 +7,9 @@ fakeredis[lua]==2.26.2
 flower==2.0.1
 # Генерация кода из proto/delivery.proto: python -m scripts.gen_proto
 grpcio-tools==1.84.0
-# Интеграционные тесты consumer'ов на настоящем RabbitMQ в Docker.
-testcontainers[rabbitmq]==4.13.2
+# Интеграционные тесты: PostgreSQL и RabbitMQ в Docker (ЛР № 7, № 10).
+testcontainers[postgres,rabbitmq]==4.13.2
+# ЛР № 10: покрытие, контрактные тесты кухня ↔ монолит, мутационное тестирование.
+pytest-cov==7.1.0
+pact-python==4.2.0
+mutmut==3.8.1

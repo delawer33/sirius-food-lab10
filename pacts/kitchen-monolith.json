@@ -1,0 +1,106 @@
+{
+  "consumer": {
+    "name": "kitchen"
+  },
+  "interactions": [
+    {
+      "contents": {
+        "content": {
+          "event_id": "0b7e9d41-1f0a-4c8e-b8e3-2d4f6a9c7e21",
+          "event_type": "OrderCancelled",
+          "order_id": 42,
+          "reason": "client"
+        },
+        "contentType": "application/json",
+        "encoded": false
+      },
+      "description": "OrderCancelled",
+      "matchingRules": {
+        "body": {
+          "$.event_id": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "regex",
+                "regex": "^([0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}|[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12})$"
+              }
+            ]
+          },
+          "$.order_id": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "integer"
+              }
+            ]
+          },
+          "$.reason": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "contentType": "application/json",
+        "routing_key": "order.cancelled"
+      },
+      "pending": false,
+      "type": "Asynchronous/Messages"
+    },
+    {
+      "contents": {
+        "content": {
+          "event_id": "6f1c2a52-6d2e-4d8f-9a55-0c3b5e8a1d10",
+          "event_type": "OrderPaid",
+          "order_id": 42
+        },
+        "contentType": "application/json",
+        "encoded": false
+      },
+      "description": "OrderPaid",
+      "matchingRules": {
+        "body": {
+          "$.event_id": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "regex",
+                "regex": "^([0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}|[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12})$"
+              }
+            ]
+          },
+          "$.order_id": {
+            "combine": "AND",
+            "matchers": [
+              {
+                "match": "integer"
+              }
+            ]
+          }
+        }
+      },
+      "metadata": {
+        "contentType": "application/json",
+        "routing_key": "order.paid"
+      },
+      "pending": false,
+      "type": "Asynchronous/Messages"
+    }
+  ],
+  "metadata": {
+    "pactRust": {
+      "ffi": "0.5.13",
+      "models": "1.3.18"
+    },
+    "pactSpecification": {
+      "version": "4.0"
+    }
+  },
+  "provider": {
+    "name": "monolith"
+  }
+}
