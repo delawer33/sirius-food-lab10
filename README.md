@@ -208,8 +208,12 @@ WORKERS=1 ./scripts/load_stand.sh api       # миграции, студенты
    `docker exec lab10-pg psql -U sirius -d sirius_food -c "select state, count(*) from pg_stat_activity where datname='sirius_food' group by 1"`
    показывает 15 соединений `idle in transaction`. Стеки потоков: `kill -ABRT <pid uvicorn>`,
    они печатаются в stderr API.
-5. **CI.** Вкладка Actions: зелёный прогон на `main`. Открытый PR
-   «Демо: сломанный тест» — CI красный, кнопка мержа заблокирована.
+5. **CI.** Вкладка Actions: зелёные прогоны на `main` и в
+   [PR #1](https://github.com/delawer33/sirius-food-lab10/pull/1).
+   [PR #2](https://github.com/delawer33/sirius-food-lab10/pull/2) «Демо: сломанный
+   тест» добавляет `assert 1 == 2`: CI красный (`1 failed, 361 passed`), мерж
+   заблокирован (`mergeStateStatus: BLOCKED`). Снимок — `docs/lab10/ci_red_pr.txt`.
+   PR #2 оставлен открытым для защиты.
 6. **Pact.** `.venv/bin/pytest tests/pact -v` — 3 passed. `./demo/pact_break.sh`
    переименовывает `order_id` в событии, provider-тест падает с
    `Actual map is missing the following keys: order_id`, затем файл
