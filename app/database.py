@@ -17,7 +17,13 @@ connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite")
 
 # SQLite в памяти (используется в тестах) живёт, пока открыто соединение,
 # поэтому все сессии должны делить одно соединение.
-pool_args = {"poolclass": StaticPool} if DATABASE_URL in ("sqlite://", "sqlite:///:memory:") else {}
+if DATABASE_URL in ("sqlite://", "sqlite:///:memory:"):
+    pool_args = {"poolclass": StaticPool}
+elif DATABASE_URL.startswith("sqlite"):
+    pool_args = {}
+else:
+    pool_args = {"pool_size": settings.DB_POOL_SIZE, "max_overflow": settings.DB_MAX_OVERFLOW,
+                 "pool_timeout": settings.DB_POOL_TIMEOUT}
 
 # pool_pre_ping: после перезапуска PostgreSQL старые соединения пула мертвы,
 # без проверки первый запрос получил бы 500 (видно в demo/03_dlq.sh).
