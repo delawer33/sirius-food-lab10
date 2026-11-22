@@ -1,0 +1,186 @@
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_5: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_10: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_11: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_16: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_17: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_18: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_19: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_22: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_23: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_26: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_27: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁget_delivery__mutmut_11: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁget_delivery__mutmut_12: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁget_delivery__mutmut_13: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁget_delivery__mutmut_14: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_7: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_8: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_17: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_18: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_19: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_20: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_25: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁcomplete_delivery__mutmut_27: survived
+    app.modules.delivery.service.xǁDeliveryServiceǁtrack_delivery__mutmut_1: no tests
+    app.modules.delivery.service.xǁDeliveryServiceǁtrack_delivery__mutmut_2: no tests
+    app.modules.delivery.service.xǁDeliveryServiceǁtrack_delivery__mutmut_3: no tests
+    app.modules.delivery.service.xǁDeliveryServiceǁtrack_delivery__mutmut_4: no tests
+    app.modules.delivery.service.xǁDeliveryServiceǁtrack_delivery__mutmut_5: no tests
+    app.modules.delivery.service.xǁDeliveryServiceǁ_get_existing__mutmut_5: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_5: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_12: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_17: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_22: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_24: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_29: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_30: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_39: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_42: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_43: survived
+    app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_44: survived
+    app.modules.orders.service.xǁOrderServiceǁget_order__mutmut_6: survived
+    app.modules.orders.service.xǁOrderServiceǁget_order__mutmut_7: survived
+    app.modules.orders.service.xǁOrderServiceǁget_order__mutmut_8: survived
+    app.modules.orders.service.xǁOrderServiceǁget_order__mutmut_9: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_7: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_8: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_12: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_13: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_16: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_19: survived
+    app.modules.orders.service.xǁOrderServiceǁcancel_order__mutmut_20: survived
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_1: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_2: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_3: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_4: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_5: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_6: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_7: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_8: no tests
+    app.modules.orders.service.xǁOrderServiceǁcompensate_failed_delivery__mutmut_9: no tests
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_6: survived
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_11: survived
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_12: survived
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_14: survived
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_15: survived
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_16: survived
+    app.modules.orders.service.xǁOrderServiceǁ_cancel_with_refund__mutmut_17: survived
+    app.modules.orders.service.xǁOrderServiceǁmark_ready__mutmut_4: survived
+    app.modules.orders.service.xǁOrderServiceǁmark_ready__mutmut_5: survived
+    app.modules.orders.service.xǁOrderServiceǁmark_ready__mutmut_6: survived
+    app.modules.orders.service.xǁOrderServiceǁmark_ready__mutmut_7: survived
+    app.modules.orders.service.xǁOrderServiceǁ_get_existing__mutmut_5: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_6: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_7: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_8: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_9: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_20: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_21: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_22: survived
+    app.modules.auth.service.xǁAuthServiceǁauthenticate__mutmut_23: survived
+    app.modules.auth.service.xǁAuthServiceǁrefresh__mutmut_6: survived
+    app.modules.auth.service.xǁAuthServiceǁrefresh__mutmut_7: survived
+    app.modules.auth.service.xǁAuthServiceǁrefresh__mutmut_8: survived
+    app.modules.auth.service.xǁAuthServiceǁrefresh__mutmut_9: survived
+    app.modules.auth.service.xǁAuthServiceǁrefresh__mutmut_23: survived
+    app.modules.auth.service.xǁAuthServiceǁrefresh__mutmut_30: survived
+    app.modules.auth.service.xǁAuthServiceǁlogout__mutmut_5: survived
+    app.modules.auth.service.xǁAuthServiceǁlogout__mutmut_6: survived
+    app.modules.auth.service.xǁAuthServiceǁlogout__mutmut_7: survived
+    app.modules.auth.service.xǁAuthServiceǁlogout__mutmut_8: survived
+    app.modules.auth.service.xǁAuthServiceǁ_issue_tokens__mutmut_9: survived
+    app.modules.auth.service.xǁAuthServiceǁ_issue_tokens__mutmut_10: survived
+    app.modules.auth.service.xǁAuthServiceǁ_issue_tokens__mutmut_13: survived
+    app.modules.auth.service.xǁAuthServiceǁ_ensure_active__mutmut_1: survived
+    app.modules.auth.service.xǁAuthServiceǁ_ensure_active__mutmut_2: survived
+    app.modules.auth.service.xǁAuthServiceǁ_ensure_active__mutmut_3: survived
+    app.modules.auth.service.xǁAuthServiceǁ_ensure_active__mutmut_4: survived
+    app.modules.users.service.xǁUserServiceǁregister__mutmut_4: survived
+    app.modules.users.service.xǁUserServiceǁregister__mutmut_8: survived
+    app.modules.users.service.xǁUserServiceǁcreate_user__mutmut_5: survived
+    app.modules.users.service.xǁUserServiceǁcreate_user__mutmut_6: survived
+    app.modules.users.service.xǁUserServiceǁcreate_user__mutmut_8: survived
+    app.modules.users.service.xǁUserServiceǁcreate_user__mutmut_9: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_5: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_6: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_11: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_12: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_13: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_14: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_16: survived
+    app.modules.users.service.xǁUserServiceǁtop_up__mutmut_17: survived
+    app.modules.users.service.xǁUserServiceǁchange_role__mutmut_2: survived
+    app.modules.users.service.xǁUserServiceǁchange_role__mutmut_9: survived
+    app.modules.users.service.xǁUserServiceǁchange_role__mutmut_10: survived
+    app.modules.users.service.xǁUserServiceǁset_blocked__mutmut_3: survived
+    app.modules.users.service.xǁUserServiceǁset_blocked__mutmut_7: survived
+    app.modules.users.service.xǁUserServiceǁset_blocked__mutmut_8: survived
+    app.modules.users.service.xǁUserServiceǁset_blocked__mutmut_9: survived
+    app.modules.users.service.xǁUserServiceǁ_get_other_user__mutmut_6: survived
+    app.modules.users.service.xǁUserServiceǁ_get_other_user__mutmut_7: survived
+    app.modules.users.service.xǁUserServiceǁ_get_other_user__mutmut_8: survived
+    app.modules.users.service.xǁUserServiceǁ_get_other_user__mutmut_9: survived
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_1: no tests
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_2: no tests
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_3: no tests
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_4: no tests
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_5: no tests
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_6: no tests
+    app.modules.menu.service.xǁMenuServiceǁget_item__mutmut_7: no tests
+    app.modules.menu.service.xǁMenuServiceǁcreate_item__mutmut_3: survived
+    app.modules.menu.service.xǁMenuServiceǁcreate_item__mutmut_4: survived
+    app.modules.menu.service.xǁMenuServiceǁcreate_item__mutmut_8: survived
+    app.modules.menu.service.xǁMenuServiceǁcreate_item__mutmut_9: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_5: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_9: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_11: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_12: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_13: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_14: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_17: survived
+    app.modules.menu.service.xǁMenuServiceǁupdate_item__mutmut_18: survived
+    app.modules.menu.service.xǁMenuServiceǁcreate_category__mutmut_3: survived
+    app.modules.menu.service.xǁMenuServiceǁcreate_category__mutmut_4: survived
+    app.modules.menu.service.xǁMenuServiceǁcreate_category__mutmut_6: survived
+    app.modules.menu.service.xǁMenuServiceǁ_get_category__mutmut_5: survived
+    app.domain.events.x__event__mutmut_7: survived
+    app.domain.events.x__event__mutmut_8: survived
+    app.domain.events.x__event__mutmut_9: survived
+    app.domain.events.x__event__mutmut_10: survived
+    app.domain.events.x__event__mutmut_11: survived
+    app.domain.events.x__event__mutmut_13: survived
+    app.domain.events.x_order_paid__mutmut_2: survived
+    app.domain.events.x_order_paid__mutmut_3: survived
+    app.domain.events.x_order_paid__mutmut_4: survived
+    app.domain.events.x_order_paid__mutmut_5: survived
+    app.domain.events.x_order_paid__mutmut_8: survived
+    app.domain.events.x_order_paid__mutmut_9: survived
+    app.domain.events.x_order_paid__mutmut_10: survived
+    app.domain.events.x_order_paid__mutmut_11: survived
+    app.domain.events.x_order_paid__mutmut_12: survived
+    app.domain.events.x_order_paid__mutmut_13: survived
+    app.domain.events.x_order_cancelled__mutmut_1: survived
+    app.domain.events.x_order_cancelled__mutmut_2: survived
+    app.domain.events.x_order_cancelled__mutmut_3: survived
+    app.domain.events.x_order_cancelled__mutmut_4: survived
+    app.domain.events.x_order_cancelled__mutmut_5: survived
+    app.domain.events.x_order_cancelled__mutmut_6: survived
+    app.domain.events.x_order_cancelled__mutmut_9: survived
+    app.domain.events.x_order_cancelled__mutmut_10: survived
+    app.domain.events.x_order_cancelled__mutmut_11: survived
+    app.domain.events.x_order_cancelled__mutmut_12: survived
+    app.domain.events.x_order_cancelled__mutmut_13: survived
+    app.domain.events.x_order_cancelled__mutmut_14: survived
+    app.domain.events.x_order_cancelled__mutmut_15: survived
+    app.domain.events.x_order_delivered__mutmut_1: survived
+    app.domain.events.x_order_delivered__mutmut_2: survived
+    app.domain.events.x_order_delivered__mutmut_3: survived
+    app.domain.events.x_order_delivered__mutmut_4: survived
+    app.domain.events.x_order_delivered__mutmut_5: survived
+    app.domain.events.x_order_delivered__mutmut_8: survived
+    app.domain.events.x_order_delivered__mutmut_9: survived
+    app.domain.events.x_order_delivered__mutmut_10: survived
+    app.domain.events.x_order_delivered__mutmut_11: survived
+    app.domain.events.x_order_delivered__mutmut_12: survived
+    app.domain.events.x_order_delivered__mutmut_13: survived
+    app.domain.errors.xǁDomainErrorǁ__init____mutmut_2: survived

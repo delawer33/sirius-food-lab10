@@ -112,3 +112,21 @@ def test_cancelled_delivery_cannot_be_completed(assigned, storage):
 def test_complete_unknown_delivery(service):
     with pytest.raises(NotFoundError, match="Доставка не найдена"):
         service.complete_delivery(999, actor=ADMIN)
+
+
+# --- Добавлено по итогам mutmut (ЛР № 10) ------------------------------------
+
+def test_complete_returns_completed_delivery_and_publishes_event(assigned, storage):
+    """Мутанты: OrderDelivered пропадает или теряет id; возвращается старый статус."""
+    delivery = assigned.complete_delivery(1, actor=COURIER)
+
+    assert delivery.status == "completed"
+    [event] = storage.outbox
+    assert event.routing_key == "order.delivered"
+    assert (event.payload["order_id"], event.payload["delivery_id"], event.payload["courier_id"]) == (1, 1, COURIER.id)
+
+
+def test_tracking_checks_access_first(assigned):
+    """Мутант get_delivery(None, actor): чужой студент не должен видеть трек."""
+    with pytest.raises(AccessDeniedError):
+        assigned.track_delivery(1, actor=BORIS)

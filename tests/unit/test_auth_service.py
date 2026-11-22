@@ -1,7 +1,7 @@
 """
 Unit-тесты AuthService: вход, проверка access-токена, Refresh Token rotation.
 """
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from jose import jwt
@@ -176,3 +176,21 @@ def test_access_token_lifetime_is_short(service):
 
     claims = jwt.get_unverified_claims(pair.access_token)
     assert timedelta(seconds=claims["exp"] - claims["iat"]) == timedelta(minutes=15)
+
+
+# --- Добавлено по итогам mutmut (ЛР № 10) ------------------------------------
+
+def test_refresh_token_belongs_to_user_and_expiry_is_stored(service, storage):
+    """
+    Мутанты create_refresh_token(token_version) и expires_at=None выживали:
+    refresh() ищет запись по хешу, а что внутри токена, не проверял никто.
+    """
+    storage.users[1].token_version = 3
+    pair = service.login("anna@sirius.ru", "secret-password")
+
+    claims = jwt.decode(pair.refresh_token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+    assert (claims["sub"], claims["ver"]) == ("1", 3)
+    [record] = storage.refresh_tokens.values()
+    assert record.user_id == 1
+    assert abs((record.expires_at - datetime.fromtimestamp(claims["exp"], tz=timezone.utc).replace(tzinfo=None))
+               .total_seconds()) < 1

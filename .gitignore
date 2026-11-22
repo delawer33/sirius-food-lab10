@@ -8,3 +8,4 @@ receipts/
 celerybeat-schedule*
 stand_env.sh
 .pids/
+mutants/

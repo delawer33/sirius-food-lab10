@@ -68,3 +68,39 @@ def test_create_category_rejects_duplicate_name(service, storage):
 
     with pytest.raises(BusinessRuleError, match="уже существует"):
         service.create_category("Супы")
+
+
+# --- Добавлено по итогам mutmut (ЛР № 10) ------------------------------------
+# get_item появился в ЛР № 8 для витрины и проверялся только через API.
+
+def test_get_item_returns_item(service, storage):
+    storage.menu_items[1] = BORSCHT
+
+    assert service.get_item(1) == BORSCHT
+
+
+def test_get_unknown_item_is_not_found(service):
+    with pytest.raises(NotFoundError, match="Блюдо не найдено"):
+        service.get_item(999)
+
+
+def test_create_item_saves_name_and_price(service, storage):
+    item = service.create_item("Компот", 60.0)
+
+    assert storage.menu_items[item.id] == MenuItem(item.id, "Компот", 60.0, True)
+
+
+def test_update_changes_every_passed_field(service, storage):
+    storage.menu_items[1] = BORSCHT
+    category = service.create_category("Супы")
+
+    service.update_item(1, name="Щи", price=200.0, is_available=False, category_id=category.id)
+
+    assert storage.menu_items[1] == MenuItem(1, "Щи", 200.0, False, category.id)
+
+
+def test_create_category_saves_name(service):
+    category = service.create_category("Супы")
+
+    assert [c.name for c in service.list_categories()] == ["Супы"]
+    assert category.name == "Супы"

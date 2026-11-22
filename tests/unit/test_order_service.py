@@ -157,3 +157,74 @@ def test_rejected_order_triggers_nothing(seed, notifier):
         seed(balance=10.0).create_order(user_id=1, item_id=1, quantity=1)
 
     assert notifier.calls == []
+
+
+# --- Добавлено по итогам mutmut (ЛР № 10) ------------------------------------
+# Каждый тест убивает мутанта, который выживал: код ломался, а тесты молчали.
+
+def test_balance_exactly_equal_to_total_is_enough(seed, storage):
+    """Мутант `balance < total` → `balance <= total`: последние 200 ₽ на заказ за 200 ₽."""
+    seed(balance=200.0, price=200.0).create_order(user_id=1, item_id=1, quantity=1)
+
+    assert storage.users[1].balance == 0.0
+
+
+def test_order_saved_with_requested_item_and_quantity(seed, storage):
+    """Мутанты item_id=None, quantity=None при сохранении заказа."""
+    storage.menu_items[7] = MenuItem(7, "Компот", 60.0, True)
+    order_id = seed().create_order(user_id=1, item_id=7, quantity=3)
+
+    order = storage.orders[order_id]
+    assert (order.user_id, order.item_id, order.quantity, order.total_cost) == (1, 7, 3, 180.0)
+
+
+def test_order_paid_event_goes_to_outbox(seed, storage):
+    """Мутанты: событие не создаётся, в нём None вместо id заказа, клиента или суммы."""
+    order_id = seed(price=200.0).create_order(user_id=1, item_id=1, quantity=2)
+
+    [event] = storage.outbox
+    assert event.routing_key == "order.paid"
+    assert event.payload["event_type"] == "OrderPaid"
+    assert (event.payload["order_id"], event.payload["customer_id"], event.payload["amount"]) == (order_id, 1, 400.0)
+
+
+def test_cancel_publishes_order_cancelled_with_refund(placed, storage):
+    """Мутанты: событие отмены пропадает или теряет id, клиента, сумму, причину."""
+    placed.cancel_order(1, actor=ANNA)
+
+    [event] = storage.outbox
+    assert event.routing_key == "order.cancelled"
+    assert {k: event.payload[k] for k in ("order_id", "customer_id", "refund", "reason")} == {
+        "order_id": 1, "customer_id": 1, "refund": 600.0, "reason": "client",
+    }
+
+
+@pytest.mark.parametrize("status", ["processing", "ready"])
+def test_failed_delivery_cancels_order_and_refunds(placed, storage, status):
+    """Компенсация саги в unit-тестах не проверялась вовсе: выживало даже `not in` → `in`."""
+    storage.orders[1].status = status
+
+    order = placed.compensate_failed_delivery(1)
+
+    assert order.status == "cancelled"
+    assert storage.users[1].balance == 1000.0
+    [event] = storage.outbox
+    assert (event.payload["order_id"], event.payload["reason"]) == (1, "delivery_failed")
+
+
+@pytest.mark.parametrize("status", ["cancelled", "delivered"])
+def test_compensation_skips_finished_orders(placed, storage, status):
+    storage.orders[1].status = status
+
+    assert placed.compensate_failed_delivery(1) is None
+    assert storage.users[1].balance == 400.0
+    assert storage.outbox == []
+
+
+def test_compensation_is_idempotent(placed, storage):
+    """Повтор события: деньги возвращаются один раз."""
+    placed.compensate_failed_delivery(1)
+    storage.orders[1].status = "ready"  # будто статус вернули, а возврат уже был
+
+    assert placed.compensate_failed_delivery(1) is None
+    assert storage.users[1].balance == 1000.0

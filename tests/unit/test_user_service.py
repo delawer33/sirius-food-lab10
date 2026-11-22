@@ -122,3 +122,12 @@ def test_block_and_unblock(service, storage):
 def test_block_unknown_user(service):
     with pytest.raises(NotFoundError):
         service.set_blocked(1, True, actor=ADMIN)
+
+
+# --- Добавлено по итогам mutmut (ЛР № 10) ------------------------------------
+
+def test_register_saves_email_and_phone(service, storage):
+    """Мутанты email=None и phone=None: тест на регистрацию смотрел только id и баланс."""
+    user = service.register("anna@sirius.ru", "secret-password", "+79990001122")
+
+    assert (storage.users[user.id].email, storage.users[user.id].phone) == ("anna@sirius.ru", "+79990001122")
