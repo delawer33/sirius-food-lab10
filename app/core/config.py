@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     REPO_BACKEND: str = "sql"
     # 1 — печатать выполняемые SQL-запросы в терминал.
     SQL_ECHO: bool = False
+    # Пул соединений SQLAlchemy на процесс. По умолчанию — значения SQLAlchemy
+    # (5 + 10, ожидание 30 с). Под нагрузкой пул меньше пула потоков FastAPI
+    # (40) — узкое место, см. README ЛР № 10, раздел «Нагрузка».
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT: float = 30.0
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7

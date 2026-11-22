@@ -1,224 +1,222 @@
-# Сириус.Еда: бэкенд для витрины ЛР № 8
+# Сириус.Еда: тесты в production-режиме
 
-Копия бэкенда после ЛР № 9. Для ЛР № 8 (SSR-витрина, `../sirius-food-frontend`)
-изменено немного:
+Лабораторная № 10: интеграционные тесты на настоящем PostgreSQL, нагрузка
+Locust, CI в GitHub Actions, контрактный тест Pact и мутационное тестирование
+mutmut. Отчёт по прошлой лабораторной — [docs/README_lab9.md](docs/README_lab9.md).
 
-- `GET /menu/items/{id}` — карточка блюда или 404 (`app/modules/menu/router.py`,
-  тест `test_get_item` в `tests/api/test_menu_cache.py`);
-- демо-меню из 8 блюд, включая Сырники (`scripts/seed_demo.py`);
-- CORS для `http://localhost:3000` — его использует CSR-страница `/menu-csr`;
-- `docker compose up -d` поднимает только db, redis, rabbitmq, migrate и app.
-  Остальное из ЛР № 9 — `--profile full`;
-- `scripts/run_local.sh` — запуск без Docker: SQLite, порт 8010. Этим путём
-  проверялась витрина. Вариант через Docker не проверял.
-
-Ниже — README ЛР № 9 без изменений.
-
----
-
-# Сириус.Еда: наблюдаемость
-
-Лабораторная № 9. Один `correlation_id` проходит через монолит, outbox,
-RabbitMQ и все consumer'ы. Логи — JSON в stdout, метрики — в Prometheus и
-Grafana, ошибки — в Sentry (GlitchTip), трейсы — в Jaeger.
+Репозиторий: https://github.com/delawer33/sirius-food-lab10
 
 | Уровень | Что требуется | Где проверить |
 |---|---|---|
-| 6–7 | correlation_id во всех сервисах, JSON-логи, Prometheus | `demo/01_correlation.sh`, http://localhost:9090/targets |
-| 8 | дашборд Grafana, расследование `demo-42` | http://localhost:3000, `demo/02_load.sh` |
-| 9 | ошибка в Sentry с correlation_id | `demo/03_sentry.sh`, http://localhost:8090 |
-| 10 | трейс заказа в Jaeger | http://localhost:16686, ссылка в выводе `demo/01` |
+| 6–7 | Testcontainers, Locust, найдено узкое место | `pytest tests/integration -v`, раздел «Нагрузка» |
+| 8 | CI на каждый пуш, красный CI блокирует мерж | вкладка Actions, PR со сломанным тестом |
+| 9–10 | Pact и mutmut | `pytest tests/pact -v`, `./demo/pact_break.sh`, `mutmut run` |
 
 ## Что сделано
 
-- **Correlation ID.** Middleware `app/core/correlation.py` берёт `X-Correlation-ID`
-  из запроса или создаёт UUID, кладёт в `request.state` и в contextvars логов,
-  возвращает в ответе. Событие сначала пишется в outbox, поэтому ID и
-  `traceparent` сохраняются в строке outbox (миграция `0007`). Релей кладёт их в
-  заголовки сообщения, consumer достаёт и привязывает к своим логам.
-- **JSON-логи** (`observability/logging.py`). structlog и обычный `logging`
-  (uvicorn, SQLAlchemy) выводятся одним форматтером, каждая строка — JSON с
-  `service`, `correlation_id`, `trace_id`, `order_id`, `event_id`.
-- **Метрики.** Монолит: RED на `/metrics` (prometheus-fastapi-instrumentator)
-  и свои `sirius_orders_created_total`, `sirius_cache_requests_total`. Consumer'ы и
-  релей: обработанные события по исходу (`ok/retry/dlq/bad`), время обработки,
-  неотправленные события outbox — на порту 9100. RabbitMQ — встроенный плагин
-  `rabbitmq_prometheus`, Redis — `redis_exporter`.
-- **Grafana.** Источник и дашборд «Сириус.Еда» подключаются сами при старте
-  (`monitoring/grafana/`): 10 панелей — RPS, p95, 5xx, заказы, очереди,
-  hit rate Redis и кеша меню, события consumer'ов, outbox.
-- **Sentry.** `observability/errors.py`, тег `correlation_id` на каждой ошибке.
-  Вместо sentry.io — GlitchTip в compose: тот же протокол и тот же `sentry-sdk`,
-  но без регистрации и без интернета. Для sentry.io достаточно заменить `SENTRY_DSN`.
-- **OpenTelemetry.** Span'ы HTTP, SQL, gRPC, публикации из outbox и обработки в
-  каждом consumer'е уходят в Jaeger по OTLP. Контекст через RabbitMQ передаётся
-  заголовком `traceparent`.
-- Вся система в Docker: `Dockerfile` (один образ на все процессы),
-  `docker-compose.yml` (16 контейнеров).
+**Интеграционные тесты** — `tests/integration/test_orders_postgres.py`.
+Testcontainers поднимает пустой `postgres:16-alpine` (та же версия, что в
+`docker-compose.yml`) один раз на сессию, схему накатывает `alembic upgrade head`.
+Перед каждым тестом все таблицы, кроме `alembic_version` и `roles`, очищаются
+`TRUNCATE ... RESTART IDENTITY`. Откат транзакции, как в методичке, здесь не
+подходит: обработчик заказа сам делает `commit`. Тесты проверяют цепочку
+HTTP → сервис → репозиторий → БД:
 
-## Как показать
+- заказ сохраняется, баланс списывается, событие OrderPaid лежит в outbox;
+- отклонённый заказ не оставляет ни заказа, ни события, ни списания;
+- каждый тест начинает с пустой базы;
+- карточка блюда читается из PostgreSQL, на несуществующее блюдо — 404;
+- два одновременных заказа при деньгах на один: проходит только один.
 
-### Запуск
+Рядом остались тесты ЛР № 7 на RabbitMQ (`test_rabbitmq.py`), всего 12.
+
+**Найденные баги.** Последний тест упал на первом же запуске: оба заказа прошли,
+баланс ушёл в минус (`docs/lab10/race_before_fix.txt`). Сервис читал баланс,
+проверял его и записывал новый, а второй запрос в это время читал тот же
+старый баланс. Исправление — `SELECT ... FOR UPDATE` на строку пользователя
+(`app/modules/orders/repository.py`). Первая версия исправления сама упала на
+PostgreSQL: роль подгружается через LEFT JOIN, а `FOR UPDATE` на него PostgreSQL
+не разрешает. Отсюда `FOR UPDATE OF users`. Ни одну из двух ошибок не видно на
+SQLite в памяти, на которой работают остальные 361 тест.
+
+**Нагрузка** — `locustfile.py`: 70% запросов — витрина `/menu/items`, 20% —
+карточка `/menu/items/{id}`, 10% — заказ. Токены 20 студентов берутся один раз
+до начала нагрузки: логин — это bcrypt, и 1000 логинов сами стали бы нагрузкой.
+У каждого запроса таймаут 10 с, иначе зависший запрос не попал бы ни в
+задержку, ни в ошибки. Ступени снимает `scripts/load_steps.sh`, вместе с CPU
+процессов и соединениями PostgreSQL (`scripts/load_sampler.py`).
+
+**CI** — `.github/workflows/test.yml`. На каждый пуш и PR в `main`: быстрые
+тесты (SQLite, fakeredis), интеграционные (Docker на `ubuntu-latest` есть),
+Pact, `alembic check`. В настройках `main` включена защита: проверка `test`
+обязательна, в том числе для владельца. Пуш напрямую в `main` тоже отклоняется,
+поэтому изменения идут только через PR.
+
+**Pact** — `tests/pact/`. Кухня (consumer) описывает, какие поля события ей
+нужны: те, что реально читает `kitchen_consumer`. Для OrderPaid это
+`event_id`, `event_type`, `order_id`, для OrderCancelled ещё `reason`.
+Пример из контракта прогоняется через настоящие `parse()` и `KitchenHandler`,
+контракт пишется в `pacts/kitchen-monolith.json`. Монолит (provider) строит
+сообщения настоящим `OrderService` и сверяет их с контрактом.
+
+**mutmut** — `setup.cfg`. Мутируется бизнес-логика: сервисы модулей и `app/domain`.
+Unit-тесты роутеры и репозитории не трогают, их проверяют API- и
+интеграционные тесты.
+
+### Где отступил от методички и почему
+
+| Методичка | Сделано | Почему |
+|---|---|---|
+| `POST /orders/create` с `user_id` в теле, ответ 201 | `user_id` из JWT, ответ 200 | так API устроено с лабораторной по безопасности: `user_id` в теле — дыра IDOR |
+| откат транзакции после теста | `TRUNCATE` перед тестом | обработчик сам коммитит, откатывать нечего |
+| контракт `order_id, total, currency` | `event_id, event_type, order_id` (+ `reason`) | в событии нет `total` и `currency`, а кухня читает только эти поля. Поломку показываю переименованием `order_id` |
+| `tests_dir=tests/unit/`, `paths_to_mutate=app/` | `source_paths`, `only_mutate`, `pytest_add_cli_args_test_selection` | так это называется в mutmut 3.8, старые ключи устарели |
+| узкое место через Grafana | CPU через psutil, `pg_stat_activity`, дамп потоков | Grafana из ЛР № 9 смотрит на контейнер `app` в compose; здесь API запущен процессом, чтобы менять число воркеров и пул. Метрики те же: CPU, соединения БД, p95 |
+| Python 3.11 в CI | 3.13 | на ней проект работает локально |
+
+## Нагрузка: узкое место
+
+Стенд: API на PostgreSQL и Redis в Docker, кеш меню включён, rate limit выключен
+(все пользователи Locust приходят с одного IP). На каждой ступени Locust 60 с
+держит N пользователей, пауза между запросами 1–3 с, разгон 20 пользователей
+в секунду. CPU 100% — одно ядро целиком.
+
+**Как было: 1 воркер uvicorn, пул SQLAlchemy по умолчанию (5 + 10, ожидание 30 с)**
+
+| Пользователи | RPS | p50, мс | p95, мс | Ошибки | CPU API | Соединения БД: в транзакции / всего |
+|---|---|---|---|---|---|---|
+| 50 | 21 | 7 | 40 | 0% | 14% | 0 / 5 |
+| 100 | 42 | 8 | 50 | 0% | 29% | 0,2 / 5 |
+| 200 | 80 | 9 | 70 | 0% | 54% | 0,5 / 5 |
+| 400 | 132 | 110 | **570** | 0% | **94%** | 4 / 8,5 |
+| 600 | 80 | 120 | **10 000** | **25%** | 43% | **9 / 11** |
+
+Что видно:
+
+1. **На 400 пользователях упёрлись в CPU.** Процесс uvicorn один, Python
+   исполняет код в одном потоке за раз (GIL), загрузка 94% от ядра. RPS перестал
+   расти вместе с пользователями (132 вместо ожидаемых ~160), p95 вырос в 8 раз.
+2. **На 600 система не тормозит, а ломается.** RPS падает, CPU тоже падает,
+   четверть запросов — таймауты. Процессор не занят, база простаивает:
+   активных запросов в PostgreSQL ~0, но соединения висят `idle in transaction`.
+   После снятия нагрузки API не отвечает и через минуту
+   (`docs/lab10/load/baseline/after_600.txt`).
+
+Дамп потоков зависшего процесса (`PYTHONFAULTHANDLER=1`, `kill -ABRT`,
+`docs/lab10/load/baseline/thread_dump.txt`): все 40 потоков FastAPI стоят в
+ожидании соединения из пула SQLAlchemy, все в `GET /menu/items/{id}`: карточка
+блюда, в отличие от списка, не кешируется. Соединений в пуле 15, и их держат
+запросы, которые уже выполнили запрос к БД и ждут свободный поток, чтобы
+продолжить. Потоки ждут соединения, соединения ждут потоков. Через 30 с ожидание
+обрывается ошибкой `QueuePool limit of size 5 overflow 10 reached` (в логе 153
+таких ответа 500), но очередь накопленных запросов успевает занять все потоки
+снова.
+
+**Узкое место: один процесс API, пул соединений меньше пула потоков и ожидание
+соединения 30 с.** Перегрузка по CPU превращается в зависание на пуле.
+
+**Как стало: 4 воркера, пул 10 + 10 на воркер, ожидание соединения 3 с**
 
 ```bash
-docker compose up -d --build
-./scripts/glitchtip_setup.sh   # один раз: проект в GlitchTip, DSN в .env, перезапуск сервисов
+WORKERS=4 DB_POOL_SIZE=10 DB_MAX_OVERFLOW=10 DB_POOL_TIMEOUT=3 ./scripts/load_stand.sh api
 ```
 
-| Что | Адрес |
-|---|---|
-| API | http://localhost:8010 (порт 8000 на этой машине занят) |
-| Grafana | http://localhost:3000, admin / admin |
-| Prometheus | http://localhost:9090/targets |
-| Jaeger | http://localhost:16686 |
-| GlitchTip | http://localhost:8090, admin@sirius.ru / sirius-demo |
-| RabbitMQ | http://localhost:15672, sirius / sirius |
+| Пользователи | RPS | p50, мс | p95, мс | Ошибки | CPU API |
+|---|---|---|---|---|---|
+| 400 | 142 | 9 | 46 | 0% | 109% |
+| 600 | 189 | 11 | 59 | 0% | 147% |
+| 800 | 218 | 11 | 61 | 0% | 152% |
+| 1200 (90 с) | 345 | 36 | 140 | 0% | 244% |
+| 1600 (90 с) | 361 | 55 | **390** | 0% | 251% |
 
-Остановить: `docker compose stop` (данные в томах сохраняются).
+Четыре процесса — четыре GIL, работа делится на ядра. 4 × 20 = 80 соединений,
+у PostgreSQL лимит 100. Короткое ожидание соединения — страховка: если пул всё
+же кончится, запрос быстро получит ошибку и освободит поток, а не будет держать
+его 30 с. Следующий предел около 1600 пользователей: RPS перестаёт расти,
+p95 растёт. Locust при этом занимает 71% ядра, для дальнейшей нагрузки его
+нужно запускать распределённо (`--processes`). Следующий шаг для API —
+кешировать карточку блюда, как уже кешируется список.
 
-### Расследование заказа demo-42
+Как читать цифры. RPS на ступенях 600 и 800 занижен разгоном: 800 пользователей
+при 20 в секунду набираются 40 из 60 с. Перцентили считаются по всем запросам
+ступени, включая разгон. Сырые CSV Locust и замеры раз в 2 с лежат в
+`docs/lab10/load/`.
+
+## mutmut: что нашёл
+
+| | Убито | Выжило | Без тестов |
+|---|---|---|---|
+| до (`docs/lab10/mutmut_before.txt`) | 371 | 165 | 21 |
+| после (`docs/lab10/mutmut_after.txt`) | 468 | 89 | 0 |
+
+Всего 557 мутантов. Дописанные тесты помечены «Добавлено по итогам mutmut»:
+
+- **Граница баланса.** Выживал `balance < total` → `balance <= total`: студент
+  с ровно 200 ₽ не смог бы заказать блюдо за 200 ₽.
+- **Компенсация саги.** `compensate_failed_delivery` unit-тесты не вызывали
+  вовсе, выживало даже `not in` → `in`. Теперь проверены отмена с возвратом,
+  пропуск завершённых заказов и повтор события.
+- **События.** Ни один unit-тест не смотрел, что кладётся в outbox: можно было
+  потерять OrderPaid или записать `None` вместо суммы. Добавлены проверки
+  OrderPaid, OrderCancelled, OrderDelivered и формы payload (`test_domain_events.py`).
+- **Заказ** сохранялся с `item_id=None`, и тесты молчали.
+- **`MenuService.get_item`** из ЛР № 8 проверялся только через API.
+- **Refresh-токен** мог выпускаться с чужим `sub`, а срок не сохраняться:
+  `refresh()` ищет запись по хешу и внутрь токена не смотрит.
+- **Регистрация** могла потерять email и телефон.
+
+Из 89 оставшихся 84 меняют только текст ошибки
+(`"Блюдо не найдено"` → `"XXБлюдо не найденоXX"`). Ловить каждую формулировку
+тестами — значит закрепить текст, а не поведение. Пять остальных
+неотличимы в unit-тестах: например, `reason=None` в отмене in-memory
+репозиторий не хранит, а SQL-путь проверяют API-тесты. Список — в
+`docs/lab10/survivors_after.txt`.
+
+## Как запустить
 
 ```bash
-./demo/01_correlation.sh          # или ./demo/01_correlation.sh свой-id
+python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -r requirements-bench.txt
+.venv/bin/pytest -m "not integration" --ignore=tests/integration   # 361 тест без Docker
+.venv/bin/pytest tests/integration -v                              # нужен Docker
 ```
 
-Скрипт входит студентом, отправляет заказ с `X-Correlation-ID: demo-42` и
-показывает логи всех сервисов с этим ID. Вручную то же самое:
+Стенд для нагрузки: PostgreSQL на 5442, Redis на 6390, API на 8010
+(порт 8000 на этой машине занят).
 
 ```bash
-curl -v -X POST http://127.0.0.1:8010/orders/create \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -H "X-Correlation-ID: demo-42" -d '{"item_id": 1, "quantity": 1}'
-docker logs sirius_app | jq 'select(.correlation_id == "demo-42")'
-docker logs sirius_kitchen | jq 'select(.correlation_id == "demo-42")'
+./scripts/load_stand.sh up                  # контейнеры lab10-pg, lab10-redis
+WORKERS=1 ./scripts/load_stand.sh api       # миграции, студенты load1..20, uvicorn
+./scripts/load_stand.sh down                # остановить контейнеры, данные остаются
 ```
 
-Вывод живого прогона — `docs/demo/01_correlation.txt`. Что в нём видно:
+## Как проверить руками
 
-- в ответе `x-correlation-id: demo-42`;
-- `sirius_app`: `order_created` и `http_request`; `sirius_outbox_relay`:
-  `event_published`; `sirius_kitchen`: `order_received`; плюс доставка и журнал событий;
-- у всех этих строк один `trace_id`. Скрипт печатает ссылку на трейс в Jaeger и
-  его span'ы: HTTP-запрос и SQL монолита → публикация из outbox → обработка в
-  трёх consumer'ах с их SQL;
-- если запустить скрипт дважды, у `demo-42` будет два заказа и **два разных**
-  `trace_id`: correlation_id — бизнес-операция, trace_id — один технический вызов.
-
-### Метрики в Grafana
-
-```bash
-./demo/02_load.sh 60    # минута нагрузки: 10 запросов меню и 1 заказ в секунду
-```
-
-Дашборд «Сириус.Еда» (http://localhost:3000) показывает всплеск RPS, p95 по
-эндпоинтам, заказы в секунду, обработку событий в очередях. Чтобы увидеть
-метрики за время конкретного заказа, возьмите `timestamp` из его лога и
-выделите этот интервал на графике.
-
-### Ошибка в Sentry
-
-```bash
-./demo/03_sentry.sh
-```
-
-`GET /debug/error` с `X-Correlation-ID: demo-500` → ответ 500 с тем же
-заголовком, в логе `sirius_app` — `request_failed` со стектрейсом, в GlitchTip —
-issue `RuntimeError` с тегами `correlation_id: demo-500` и `service: sirius-app`.
-Поиск в GlitchTip: `correlation_id:demo-500`. Вывод — `docs/demo/03_sentry.txt`.
-
-Consumer тоже отправляет в Sentry, но только окончательный отказ (сообщение
-ушло в DLQ), с тем correlation_id, что пришёл в заголовке сообщения.
-
-### Тесты
-
-```bash
-.venv/bin/pytest -q
-```
-
-341 тест. Наблюдаемость — `tests/unit/test_observability.py`: ID от клиента
-и сгенерированный, отбор подозрительных ID, ID в строке outbox, в заголовке
-публикуемого сообщения, в логах consumer'а и в потоке обработчика.
-
-## Как устроено
-
-```
-клиент ─X-Correlation-ID─► app ─(одна транзакция)─► orders + outbox{correlation_id, traceparent}
-                                                          │
-                       outbox_relay ◄─────────────────────┘
-                            │ headers: X-Correlation-ID, traceparent
-                            ▼
-                     RabbitMQ sirius_events ─► kitchen, delivery_worker, event_log, saga
-```
-
-- Пакет `observability/` общий: им пользуются монолит, сервис доставки и
-  consumer'ы. Каждый процесс вызывает `observability.setup("имя")`. Трейсы
-  включаются переменной `OTEL_EXPORTER_OTLP_ENDPOINT`, Sentry — `SENTRY_DSN`;
-  без них (как в тестах) всё работает, просто ничего не отправляется.
-- Клиентский `X-Correlation-ID` попадает в логи и заголовки, поэтому принимается
-  только `[A-Za-z0-9._:-]{1,128}`, иначе генерируется новый.
-- В метках метрик только значения из коротких списков (`queue`, `result`,
-  `handler`). `order_id` или `correlation_id` в метке создали бы временной ряд на
-  каждый заказ; их место — в логах.
-- В Sentry уходит только окончательный отказ consumer'а (сообщение ушло в DLQ),
-  а не каждая повторная попытка.
-
-## Отличия от методички
-
-1. **Correlation ID через outbox.** В методичке событие публикуется прямо из
-   запроса. Здесь его публикует релей позже, в другом процессе, поэтому ID и
-   `traceparent` хранятся в строке outbox.
-2. **Трассировка RabbitMQ вручную**, а не автоинструментацией aio-pika: она
-   привязала бы публикацию к циклу релея, а не к запросу, создавшему заказ.
-3. **GlitchTip вместо sentry.io**: ничего не нужно регистрировать, работает на
-   защите без интернета. Код тот же — `sentry-sdk`.
-4. **Ошибка 500** — `GET /debug/error` (только при `DEBUG`). `GET /orders/999999`
-   в проекте корректно отвечает 404.
-5. **Порт API 8010**: 8000 на этой машине занят другим проектом. Prometheus
-   ходит к приложению внутри сети compose (`app:8000`), а не через
-   `host.docker.internal`.
-6. **Прошлые демо** (лабораторная № 7) перенесены в `demo/lab7/`.
-
-## Контрольные вопросы
-
-**1. Observability и мониторинг.** Мониторинг отвечает на заранее заданные
-вопросы: жив ли сервис, превышен ли порог. Observability позволяет ответить
-на новый вопрос по уже собранным логам, метрикам и трейсам — например, почему
-один заказ дошёл до кухни, а другой нет.
-
-**2. Зачем correlation_id.** Связать все записи одной бизнес-операции в разных
-сервисах. Без него логи монолита и кухни сопоставляются только по времени, а
-при нескольких заказах в секунду это угадывание.
-
-**3. Почему stdout, а не файл.** Docker сам собирает stdout (`docker logs`), а
-файл внутри контейнера пропадает при пересоздании и не виден снаружи. При
-нескольких репликах файлы лежали бы на разных машинах.
-
-**4. correlation_id и trace_id.** correlation_id задаёт приложение (или клиент),
-он живёт всю бизнес-операцию и бывает в логах, БД, тикетах. trace_id создаёт
-OTel SDK на один технический вызов. В демо у двух заказов с `demo-42` один
-correlation_id и два trace_id.
-
-**5. RED.** Rate — запросы в секунду, Errors — доля ошибок, Duration —
-время ответа. Три метрики на каждый эндпоинт (панели RPS, 5xx, p95).
-
-**6. Span и trace.** Span — один шаг: имя, начало, длительность, родитель,
-атрибуты (SQL-запрос, обработка сообщения кухней). Trace — дерево span'ов
-одного вызова через все сервисы.
-
-**7. Context propagation.** Передача trace_id и id родительского span'а в
-следующий сервис заголовком `traceparent`: в HTTP, метаданных gRPC и здесь — в
-заголовках сообщения RabbitMQ. Заголовок не копит данные, каждый сервис сам
-отправляет свои span'ы в Jaeger.
-
-**8. Sentry и логи.** Логи пишут всё подряд, их надо искать. Sentry собирает
-только ошибки, группирует одинаковые, считает повторы, показывает стектрейс,
-запрос и теги и сам оповещает.
-
-**9. Кардинальность метрик.** Число уникальных сочетаний меток. Каждое — отдельный
-временной ряд в памяти Prometheus. Метка с `order_id` или `user_id` даёт ряд на
-каждый заказ и рано или поздно кладёт Prometheus. Поэтому такие поля — в логах.
-
-**10. request.state и call_next.** `request.state` — место для данных одного
-запроса: middleware кладёт туда correlation_id, эндпоинт читает. `call_next`
-передаёт запрос дальше по цепочке и возвращает ответ, после чего middleware
-может дописать заголовок `X-Correlation-ID`.
+1. **Интеграционные тесты.**
+   `.venv/bin/pytest tests/integration -v` — 12 passed за ~25 с, в `docker ps`
+   на это время появляются `postgres:16-alpine` и `rabbitmq`. Вывод —
+   `docs/lab10/integration.txt`.
+2. **Тест ловит гонку.** Убрать `with_for_update=...` из `get_user_by_id` в
+   `app/modules/orders/repository.py` → `test_parallel_orders_do_not_overspend`
+   падает с `['ok', 'ok'] == ['ok', 'rejected']`.
+3. **Locust с интерфейсом.** Стенд поднят, затем
+   `.venv/bin/locust -f locustfile.py --host=http://127.0.0.1:8010`,
+   http://localhost:8089: 50 пользователей, spawn rate 10, потом 400 и 600.
+   На вкладке Charts видно, как растёт p95, на 600 появляются ошибки.
+   Без интерфейса и с записью цифр: `./scripts/load_steps.sh /tmp/load 50 100 200 400 600`.
+4. **Узкое место.** После ступени 600 на 1 воркере:
+   `curl -m 10 http://127.0.0.1:8010/menu/items` не отвечает, а
+   `docker exec lab10-pg psql -U sirius -d sirius_food -c "select state, count(*) from pg_stat_activity where datname='sirius_food' group by 1"`
+   показывает 15 соединений `idle in transaction`. Стеки потоков: `kill -ABRT <pid uvicorn>`,
+   они печатаются в stderr API.
+5. **CI.** Вкладка Actions: зелёные прогоны на `main` и в
+   [PR #1](https://github.com/delawer33/sirius-food-lab10/pull/1).
+   [PR #2](https://github.com/delawer33/sirius-food-lab10/pull/2) «Демо: сломанный
+   тест» добавляет `assert 1 == 2`: CI красный (`1 failed, 361 passed`), мерж
+   заблокирован (`mergeStateStatus: BLOCKED`). Снимок — `docs/lab10/ci_red_pr.txt`.
+   PR #2 оставлен открытым для защиты.
+6. **Pact.** `.venv/bin/pytest tests/pact -v` — 3 passed. `./demo/pact_break.sh`
+   переименовывает `order_id` в событии, provider-тест падает с
+   `Actual map is missing the following keys: order_id`, затем файл
+   возвращается. Вывод — `docs/lab10/pact_break.txt`.
+7. **mutmut.** `.venv/bin/mutmut run` (~20 с на 16 ядрах), затем
+   `.venv/bin/mutmut results` и `.venv/bin/mutmut show <имя мутанта>`.

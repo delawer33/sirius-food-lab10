@@ -1,0 +1,32 @@
+# Дамп потоков зависшего API (kill -ABRT, PYTHONFAULTHANDLER=1) после ступени 600
+Потоков: 53
+Ждут соединение в пуле SQLAlchemy: 40
+Ответов 500 «QueuePool limit of size 5 overflow 10 reached, timeout 30» в логе: 153
+
+Обработчики, чьи потоки ждут соединение:
+     40 app/modules/menu/router.py", line 39 in get_menu_item
+
+Пример стека:
+sqlalchemy/util/queue.py", line 201 in get
+sqlalchemy/pool/impl.py", line 158 in _do_get
+sqlalchemy/pool/base.py", line 712 in checkout
+sqlalchemy/pool/base.py", line 1263 in _checkout
+sqlalchemy/pool/base.py", line 449 in connect
+sqlalchemy/engine/base.py", line 3302 in raw_connection
+sqlalchemy/engine/base.py", line 146 in __init__
+sqlalchemy/engine/base.py", line 3278 in connect
+sqlalchemy/orm/session.py", line 1189 in _connection_for_bind
+sqlalchemy/orm/state_changes.py", line 139 in _go
+<string>", line 2 in _connection_for_bind
+sqlalchemy/orm/session.py", line 2106 in _connection_for_bind
+sqlalchemy/orm/session.py", line 2237 in _execute_internal
+sqlalchemy/orm/session.py", line 2362 in execute
+sqlalchemy/orm/loading.py", line 694 in load_on_pk_identity
+sqlalchemy/orm/session.py", line 3873 in _get_impl
+sqlalchemy/orm/session.py", line 3693 in get
+app/modules/menu/repository.py", line 41 in get_item_by_id
+app/modules/menu/repository.py", line 252 in get_item_by_id
+app/modules/menu/service.py", line 24 in get_item
+app/modules/menu/router.py", line 39 in get_menu_item
+anyio/_backends/_asyncio.py", line 1124 in run
+/usr/lib/python3.13/threading.py", line 1043 in _bootstrap_inner
