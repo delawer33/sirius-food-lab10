@@ -1,7 +1,7 @@
 """
 Нагрузочный тест «Сириус.Еды»: витрина, карточка блюда, заказ.
 
-    locust -f locustfile.py --host=http://127.0.0.1:8010
+    locust -f locustfile.py --host=http://127.0.0.1:8020
 
 Веб-интерфейс: http://localhost:8089. Без интерфейса, ступенями 50 → 100 → 200
 пользователей и с записью CSV — scripts/load_steps.sh.
