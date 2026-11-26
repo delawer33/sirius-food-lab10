@@ -155,7 +155,7 @@ docker exec lab10-pg psql -U sirius -d sirius_food -c "select state, count(*) fr
 ```
 
 В ответе строка `idle in transaction | 15`: все 15 соединений с базой заняты, но ими никто
-не пользуется.
+не пользуется. Строка с пустым `state` — служебные процессы PostgreSQL, `active` — сам этот запрос.
 
 Что сказать:
 
