@@ -1,7 +1,9 @@
 # ЛР № 10 руками: как показать
 
-Порядок — как в разделе «Что сдавать» методички. Только стандартные инструменты: `pytest`,
-`docker`, `psql`, `curl`, `top`, `grep`, веб-интерфейс Locust, страницы GitHub и `gh`.
+Сдаём на 6 баллов: интеграционные тесты с Testcontainers работают, Locust показывает RPS
+и latency, нагрузка выявляет узкое место. Порядок — как в разделе «Что сдавать» методички,
+пункты 1–4. Только стандартные инструменты: `pytest`, `docker`, `psql`, `curl`, `top`, `grep`
+и веб-интерфейс Locust.
 Скрипт `scripts/load_stand.sh` только поднимает стенд: контейнеры и API с нужными настройками.
 Каждый шаг прогнан на этом ноутбуке. Цифры нагрузки от прогона к прогону немного плавают.
 
@@ -253,130 +255,11 @@ scripts/load_stand.sh down
 
 Контейнеры остановлены, данные остаются.
 
-## 5. CI в GitHub Actions (пункт 5)
-
-Репозиторий: https://github.com/delawer33/sirius-food-lab10
-
-- **Зелёный на пуш.** Вкладка [Actions](https://github.com/delawer33/sirius-food-lab10/actions),
-  workflow `Tests`: прогоны на `main` с зелёной галочкой. Внутри — шаги «Run unit and API tests»
-  (361 тест) и «Run integration tests» (Testcontainers поднимает PostgreSQL прямо в CI).
-  Конфигурация — `.github/workflows/test.yml`.
-- **Красный на сломанном тесте.**
-  [PR #2](https://github.com/delawer33/sirius-food-lab10/pull/2) «Демо: сломанный тест»
-  добавляет в `tests/unit/test_order_service.py` тест с `assert 1 == 2`. Проверка `test`
-  красная. Внизу PR (под аккаунтом владельца) кнопка мержа неактивна: обязательная проверка
-  не прошла.
-- **Почему мерж запрещён.** Settings → Branches → правило для `main`: обязательная проверка
-  `test`, правило действует и на владельца.
-
-То же из терминала:
-
-```bash
-gh pr checks 2
-```
-```bash
-gh pr view 2 --json mergeStateStatus
-```
-
-Ответы: `test	fail …` и `{"mergeStateStatus":"BLOCKED"}`.
-
-## 6. Pact: контракт кухни и монолита (пункт 6, 9–10 баллов)
-
-```bash
-pytest tests/pact -v
-```
-
-Ответ: `3 passed`. Два consumer-теста кухни пишут контракт, provider-тест монолита его
-проверяет. Что кухня требует от событий:
-
-```bash
-jq -c '.interactions[] | {description, body: .contents.content}' pacts/kitchen-monolith.json
-```
-
-Ответ:
-
-```
-{"description":"OrderCancelled","body":{"event_id":"…","event_type":"OrderCancelled","order_id":42,"reason":"client"}}
-{"description":"OrderPaid","body":{"event_id":"…","event_type":"OrderPaid","order_id":42}}
-```
-
-Это те поля, которые реально читает `kitchen_consumer`. `total` и `currency` из методички
-в событии нет, поэтому поломку показываем на `order_id`.
-
-**Сломать контракт.** Открыть `app/domain/events.py`, строка 36, и переименовать
-`order_id=order_id` в `orderId=order_id`:
-
-```python
-    return _event(ORDER_PAID, "OrderPaid", orderId=order_id, customer_id=customer_id, amount=amount)
-```
-
-```bash
-pytest tests/pact/test_monolith_provider.py
-```
-
-Ответ: `1 failed`, в выводе `Actual map is missing the following keys: order_id`.
-Монолит перестал отдавать поле, которое нужно кухне, и тест упал до продакшена. Вернуть:
-
-```bash
-git checkout app/domain/events.py
-```
-
-## 7. mutmut: слабые тесты (пункт 6, 9–10 баллов)
-
-Настройка — `setup.cfg`, раздел `[mutmut]`: мутируется `app/`, тесты — `tests/unit/`,
-только бизнес-логика (сервисы модулей и `app/domain`).
-
-```bash
-mutmut run
-```
-
-Ответ: `557/557  🎉 468 … 🙁 89`: 468 мутантов убито, 89 выжило. Результаты кешируются
-в `mutants/`, повторный запуск — секунды.
-
-Как было до дописанных тестов (сохранённый вывод `mutmut results` первого прогона):
-
-```bash
-grep -c survived docs/lab10/mutmut_before.txt
-```
-```bash
-grep -c "no tests" docs/lab10/mutmut_before.txt
-```
-
-Ответы: 165 выживших и 21 мутант без тестов. Стало 89 и 0.
-
-Пример убитого мутанта — граница баланса:
-
-```bash
-mutmut show 'app.modules.orders.service.xǁOrderServiceǁcreate_order__mutmut_22'
-```
-
-Ответ: `killed`, в диффе `balance < total_cost` заменено на `balance <= total_cost`. Раньше
-он выживал: студент с ровно 200 ₽ не смог бы заказать блюдо за 200 ₽, а тесты бы молчали.
-Его убивает `test_balance_exactly_equal_to_total_is_enough` (`tests/unit/test_order_service.py:165`).
-Остальные дописанные тесты помечены комментарием «Добавлено по итогам mutmut», список —
-в README, раздел «mutmut: что нашёл».
-
-Кто выжил:
-
-```bash
-mutmut results
-```
-
-Почти все выжившие меняют только текст ошибки:
-
-```bash
-mutmut show 'app.modules.delivery.service.xǁDeliveryServiceǁassign_courier__mutmut_5'
-```
-
-Ответ: `"Заказ не найден"` → `"XXЗаказ не найденXX"`. Из 89 таких 84. Проверять каждую
-формулировку — значит закрепить текст, а не поведение. Разбор всех 89 —
-`docs/lab10/survivors_after.txt`.
-
 ## После показа
 
 ```bash
 git status
 ```
 
-Ответ: `nothing to commit, working tree clean`. Если файлы из шагов 2 и 6 остались
-изменёнными — `git checkout` из этих шагов. Контейнеры стенда остановлены в шаге 4.
+Ответ: `nothing to commit, working tree clean`. Если `repository.py` из шага 2 остался
+изменённым — `git checkout` из этого шага. Контейнеры стенда остановлены в шаге 4.
