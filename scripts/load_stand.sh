@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# API для нагрузочного теста: PostgreSQL и Redis в Docker, uvicorn на 8010.
+# API для нагрузочного теста: PostgreSQL и Redis в Docker, uvicorn на 8020 (8010 занят стендом практики).
 #
 #   ./scripts/load_stand.sh up        # контейнеры lab10-pg (5442) и lab10-redis (6390)
 #   WORKERS=1 ./scripts/load_stand.sh api   # миграции, студенты load1..20, uvicorn
@@ -25,12 +25,14 @@ api)
   export DATABASE_URL=postgresql://sirius:sirius@127.0.0.1:5442/sirius_food
   export REDIS_URL=redis://127.0.0.1:6390/0 CELERY_BROKER_URL=redis://127.0.0.1:6390/1
   export RATE_LIMIT_ENABLED=False DEBUG=False
+  # Locust логинится один раз при старте теста; 15 минут на показ ступеней мало.
+  export ACCESS_TOKEN_EXPIRE_MINUTES=120
   export OTEL_EXPORTER_OTLP_ENDPOINT= SENTRY_DSN=
   # kill -ABRT <pid> — стеки всех потоков в stderr, если API завис.
   export PYTHONFAULTHANDLER=1
   "$PY" -m alembic upgrade head
   "$PY" -m scripts.seed_load
-  exec "$PY" -m uvicorn app.main:app --host 127.0.0.1 --port "${PORT:-8010}" \
+  exec "$PY" -m uvicorn app.main:app --host 127.0.0.1 --port "${PORT:-8020}" \
     --workers "${WORKERS:-1}" --no-access-log
   ;;
 esac

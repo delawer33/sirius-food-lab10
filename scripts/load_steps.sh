@@ -10,7 +10,7 @@ set -eu
 cd "$(dirname "$0")/.."
 OUT="$1"; shift
 DURATION="${DURATION:-60}"
-HOST="${HOST:-http://127.0.0.1:8010}"
+HOST="${HOST:-http://127.0.0.1:8020}"
 LOCUST="${LOCUST:-.venv/bin/locust}"
 mkdir -p "$OUT"
 

@@ -180,8 +180,8 @@ python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -r require
 .venv/bin/pytest tests/integration -v                              # нужен Docker
 ```
 
-Стенд для нагрузки: PostgreSQL на 5442, Redis на 6390, API на 8010
-(порт 8000 на этой машине занят).
+Стенд для нагрузки: PostgreSQL на 5442, Redis на 6390, API на 8020
+(8000 занят другим проектом, 8010 — стендом практики).
 
 ```bash
 ./scripts/load_stand.sh up                  # контейнеры lab10-pg, lab10-redis
@@ -191,32 +191,5 @@ WORKERS=1 ./scripts/load_stand.sh api       # миграции, студенты
 
 ## Как проверить руками
 
-1. **Интеграционные тесты.**
-   `.venv/bin/pytest tests/integration -v` — 12 passed за ~25 с, в `docker ps`
-   на это время появляются `postgres:16-alpine` и `rabbitmq`. Вывод —
-   `docs/lab10/integration.txt`.
-2. **Тест ловит гонку.** Убрать `with_for_update=...` из `get_user_by_id` в
-   `app/modules/orders/repository.py` → `test_parallel_orders_do_not_overspend`
-   падает с `['ok', 'ok'] == ['ok', 'rejected']`.
-3. **Locust с интерфейсом.** Стенд поднят, затем
-   `.venv/bin/locust -f locustfile.py --host=http://127.0.0.1:8010`,
-   http://localhost:8089: 50 пользователей, spawn rate 10, потом 400 и 600.
-   На вкладке Charts видно, как растёт p95, на 600 появляются ошибки.
-   Без интерфейса и с записью цифр: `./scripts/load_steps.sh /tmp/load 50 100 200 400 600`.
-4. **Узкое место.** После ступени 600 на 1 воркере:
-   `curl -m 10 http://127.0.0.1:8010/menu/items` не отвечает, а
-   `docker exec lab10-pg psql -U sirius -d sirius_food -c "select state, count(*) from pg_stat_activity where datname='sirius_food' group by 1"`
-   показывает 15 соединений `idle in transaction`. Стеки потоков: `kill -ABRT <pid uvicorn>`,
-   они печатаются в stderr API.
-5. **CI.** Вкладка Actions: зелёные прогоны на `main` и в
-   [PR #1](https://github.com/delawer33/sirius-food-lab10/pull/1).
-   [PR #2](https://github.com/delawer33/sirius-food-lab10/pull/2) «Демо: сломанный
-   тест» добавляет `assert 1 == 2`: CI красный (`1 failed, 361 passed`), мерж
-   заблокирован (`mergeStateStatus: BLOCKED`). Снимок — `docs/lab10/ci_red_pr.txt`.
-   PR #2 оставлен открытым для защиты.
-6. **Pact.** `.venv/bin/pytest tests/pact -v` — 3 passed. `./demo/pact_break.sh`
-   переименовывает `order_id` в событии, provider-тест падает с
-   `Actual map is missing the following keys: order_id`, затем файл
-   возвращается. Вывод — `docs/lab10/pact_break.txt`.
-7. **mutmut.** `.venv/bin/mutmut run` (~20 с на 16 ядрах), затем
-   `.venv/bin/mutmut results` и `.venv/bin/mutmut show <имя мутанта>`.
+Пошаговая инструкция для защиты — [docs/lab10-demo.md](docs/lab10-demo.md): интеграционные
+тесты и гонка, Locust и узкое место с дампом потоков, CI, Pact, mutmut.
