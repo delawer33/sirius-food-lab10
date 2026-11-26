@@ -6,6 +6,7 @@ SqlAlchemyOrderRepository — PostgreSQL/SQLite через ORM,
 InMemoryOrderRepository — словари в памяти процесса.
 Бизнес-правил здесь нет: только чтение и запись.
 """
+
 from collections.abc import Sequence
 from dataclasses import replace
 
@@ -49,7 +50,12 @@ class SqlAlchemyOrderRepository(OrderRepository):
         # заказа проходили проверку (tests/integration/test_orders_postgres.py).
         # OF users: роль подгружается LEFT JOIN, а его PostgreSQL блокировать не даёт.
         # populate_existing — свежий баланс, даже если пользователь уже в сессии.
-        row = self.db.get(UserModel, user_id, with_for_update={"of": UserModel}, populate_existing=True)
+        row = self.db.get(
+            UserModel,
+            user_id,
+            with_for_update={"of": UserModel},
+            populate_existing=True,
+        )
         return user_to_entity(row) if row else None
 
     def get_menu_item_by_id(self, item_id: int) -> MenuItem | None:
@@ -64,7 +70,12 @@ class SqlAlchemyOrderRepository(OrderRepository):
         )
 
     def save_order(
-        self, user_id: int, item_id: int, quantity: int, total_cost: float, new_balance: float,
+        self,
+        user_id: int,
+        item_id: int,
+        quantity: int,
+        total_cost: float,
+        new_balance: float,
         make_events: EventsFactory = lambda order_id: (),
     ) -> int:
         user = self.db.get(UserModel, user_id)
@@ -90,11 +101,19 @@ class SqlAlchemyOrderRepository(OrderRepository):
         return _order_to_entity(row) if row else None
 
     def list_orders_by_user(self, user_id: int) -> list[Order]:
-        rows = self.db.query(OrderModel).filter(OrderModel.user_id == user_id).order_by(OrderModel.id)
+        rows = (
+            self.db.query(OrderModel)
+            .filter(OrderModel.user_id == user_id)
+            .order_by(OrderModel.id)
+        )
         return [_order_to_entity(row) for row in rows]
 
     def list_orders_by_status(self, status: str) -> list[Order]:
-        rows = self.db.query(OrderModel).filter(OrderModel.status == status).order_by(OrderModel.id)
+        rows = (
+            self.db.query(OrderModel)
+            .filter(OrderModel.status == status)
+            .order_by(OrderModel.id)
+        )
         return [_order_to_entity(row) for row in rows]
 
     def set_order_status(self, order_id: int, status: str) -> Order:
@@ -105,8 +124,12 @@ class SqlAlchemyOrderRepository(OrderRepository):
         return _order_to_entity(row)
 
     def cancel_order(
-        self, order_id: int, status: str, new_balance: float,
-        reason: str = "client", events: Sequence[DomainEvent] = (),
+        self,
+        order_id: int,
+        status: str,
+        new_balance: float,
+        reason: str = "client",
+        events: Sequence[DomainEvent] = (),
     ) -> Order:
         row = self.db.get(OrderModel, order_id)
         row.status = status
@@ -136,7 +159,12 @@ class InMemoryOrderRepository(OrderRepository):
         return replace(item) if item else None
 
     def save_order(
-        self, user_id: int, item_id: int, quantity: int, total_cost: float, new_balance: float,
+        self,
+        user_id: int,
+        item_id: int,
+        quantity: int,
+        total_cost: float,
+        new_balance: float,
         make_events: EventsFactory = lambda order_id: (),
     ) -> int:
         with self.storage.lock:
@@ -158,10 +186,18 @@ class InMemoryOrderRepository(OrderRepository):
         return replace(order) if order else None
 
     def list_orders_by_user(self, user_id: int) -> list[Order]:
-        return [replace(o) for _, o in sorted(self.storage.orders.items()) if o.user_id == user_id]
+        return [
+            replace(o)
+            for _, o in sorted(self.storage.orders.items())
+            if o.user_id == user_id
+        ]
 
     def list_orders_by_status(self, status: str) -> list[Order]:
-        return [replace(o) for _, o in sorted(self.storage.orders.items()) if o.status == status]
+        return [
+            replace(o)
+            for _, o in sorted(self.storage.orders.items())
+            if o.status == status
+        ]
 
     def set_order_status(self, order_id: int, status: str) -> Order:
         with self.storage.lock:
@@ -169,8 +205,12 @@ class InMemoryOrderRepository(OrderRepository):
             return replace(self.storage.orders[order_id])
 
     def cancel_order(
-        self, order_id: int, status: str, new_balance: float,
-        reason: str = "client", events: Sequence[DomainEvent] = (),
+        self,
+        order_id: int,
+        status: str,
+        new_balance: float,
+        reason: str = "client",
+        events: Sequence[DomainEvent] = (),
     ) -> Order:
         with self.storage.lock:
             order = self.storage.orders[order_id]
